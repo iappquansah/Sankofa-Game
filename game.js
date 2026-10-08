@@ -263,6 +263,9 @@ async function startPuzzle(opts) {
 function renderBoard() {
   board.innerHTML = "";
   board.classList.toggle("pure", twist === "Pure");
+
+  board.style.setProperty('--puzzle-img', `url(${puzzle.sq || puzzle.image})`);
+
   const e = order.indexOf(TOTAL - 1);
   order.forEach((t, pos) => {
     const d = document.createElement("div");
@@ -274,7 +277,7 @@ function renderBoard() {
       if (lastMove && lastMove.to === pos) c += " slide";
     }
     d.className = c;
-    d.style.backgroundImage = `url(${puzzle.sq || puzzle.image})`;
+    //d.style.backgroundImage = `url(${puzzle.sq || puzzle.image})`;
     d.style.backgroundSize = `${SIZE * 100}% ${SIZE * 100}%`;
     d.style.backgroundPosition = `${colOf(t) * 100 / (SIZE - 1)}% ${rowOf(t) * 100 / (SIZE - 1)}%`;
     if (twist === "Numbered" && !solved) d.textContent = t + 1;
