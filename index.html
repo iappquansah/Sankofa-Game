@@ -60,18 +60,21 @@
     <button id="journalBack" class="secondary">Home</button>
   </section>
 
-  <!-- EXPLORE -->
+    <!-- EXPLORE -->
   <section id="exploreScreen" class="screen hidden">
-    <h2>Explore</h2>
-    <p class="message">Free play: pick a pack, a size and any puzzle.</p>
-    <div id="exCats"></div>
-    <div id="exSizes">
-      <button class="chip" data-s="3">3×3</button><button class="chip" data-s="4">4×4</button><button class="chip" data-s="5">5×5</button>
+    <div class="exHead">
+      <div class="exTitle"><h2>Explore</h2><small id="exCount"></small></div>
+      <div id="sizeSeg" class="seg">
+        <button class="segBtn" data-s="3">3×3</button>
+        <button class="segBtn" data-s="4">4×4</button>
+        <button class="segBtn" data-s="5">5×5</button>
+      </div>
+      <div id="packTabs" class="packTabs"></div>
     </div>
-    <div id="exGrid"></div>
+    <div id="exList"></div>
     <button id="exBack" class="secondary">Home</button>
   </section>
-
+  
   <!-- HERITAGE CARD -->
   <div id="card" class="hidden">
     <div class="cardBox">

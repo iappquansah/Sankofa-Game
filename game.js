@@ -399,23 +399,44 @@ $("journalBack").onclick = () => { refreshHome(); showScreen("home"); };
 /* ---------- EXPLORE (free play by pack and size) ---------- */
 let exCat = "all", exSize = 3;
 function renderExplore() {
-  const packs = CATEGORIES.filter(c => PUZZLES.some(p => p.cat === c.id));
-  $("exCats").innerHTML = [{ id: "all", name: "All", emoji: "⭐" }, ...packs]
-    .map(c => `<button class="chip${exCat === c.id ? " on" : ""}" data-id="${c.id}">${c.name}</button>`).join("");
-  $("exCats").querySelectorAll(".chip").forEach(b => b.onclick = () => { exCat = b.dataset.id; renderExplore(); });
-  $("exSizes").querySelectorAll(".chip").forEach(b => b.classList.toggle("on", +b.dataset.s === exSize));
-  const grid = $("exGrid"); grid.innerHTML = "";
+  const names = Object.fromEntries(CATEGORIES.map(c => [c.id, c.name]));
+  const packs = CATEGORIES.map(c => ({ ...c, n: PUZZLES.filter(p => p.cat === c.id).length })).filter(c => c.n);
+  const tabs = [{ id: "all", name: "All", n: PUZZLES.length }, ...packs];
+  const bar = $("packTabs");
+  bar.innerHTML = tabs.map(c => `<button class="packTab${exCat === c.id ? " on" : ""}" data-id="${c.id}">${c.name}<em>${c.n}</em></button>`).join("");
+  bar.querySelectorAll(".packTab").forEach(b => b.onclick = () => { exCat = b.dataset.id; renderExplore(); });
+  const on = bar.querySelector(".on");
+  if (on) bar.scrollLeft = on.offsetLeft - (bar.clientWidth - on.offsetWidth) / 2;
+
+  $("sizeSeg").querySelectorAll(".segBtn").forEach(b => {
+    b.classList.toggle("on", +b.dataset.s === exSize);
+    b.onclick = () => { exSize = +b.dataset.s; renderExplore(); };
+  });
+
+  const list = $("exList"); list.innerHTML = "";
+  let shown = 0;
   PUZZLES.forEach((p, i) => {
     if (exCat !== "all" && p.cat !== exCat) return;
-    const d = document.createElement("div");
-    d.className = "jItem"; d.style.backgroundImage = `url(${p.image})`;
-    const sp = document.createElement("span"); sp.className = "jName"; sp.textContent = p.name;
-    d.appendChild(sp);
-    d.onclick = () => startPuzzle({ idx: i, size: exSize });
-    grid.appendChild(d);
+    shown++;
+    // const card = document.createElement("div"); card.className = "exCard";
+    // const img = document.createElement("div"); img.className = "exImg"; img.style.backgroundImage = `url(${p.image})`;
+    // const info = document.createElement("div"); info.className = "exInfo";
+    // const name = document.createElement("b"); name.textContent = p.name;
+    // const tag = document.createElement("small"); tag.textContent = names[p.cat] || "";
+    // info.append(name, tag); card.append(img, info);
+
+    const card = document.createElement("div"); card.className = "exCard";
+card.style.backgroundImage = `url(${p.image})`;
+const name = document.createElement("span"); name.className = "exName"; name.textContent = p.name;
+card.append(name);
+
+    if (save.journal.includes(i)) card.insertAdjacentHTML("beforeend",
+      '<div class="exDone"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></div>');
+    card.onclick = () => startPuzzle({ idx: i, size: exSize });
+    list.appendChild(card);
   });
+  $("exCount").textContent = `${shown} puzzle${shown === 1 ? "" : "s"}`;
 }
-$("exSizes").querySelectorAll(".chip").forEach(b => b.onclick = () => { exSize = +b.dataset.s; renderExplore(); });
 $("tabExplore").onclick = () => { renderExplore(); showScreen("exploreScreen"); };
 $("tabHome").onclick = () => { refreshHome(); showScreen("home"); };
 $("exBack").onclick = () => { refreshHome(); showScreen("home"); };
