@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1d1530">
+  <title>Sankofa Sanctuary</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- HOME -->
+  <section id="home" class="screen">
+    <header class="hud">
+      <h1 id="title" class="logo">Sankofa<span>Sanctuary</span></h1>
+      <div class="hudRight">
+        <div class="chip2" title="Streak"><svg viewBox="0 0 24 24"><path fill="#ffc94a" d="M12 2c1 4 5.5 6 5.500 11a5.500 5.500 0 0 1-11 0c0-2.200 1-3.500 2.200-4.500.1 2 1 3 2.300 3C11 7.500 10.500 5 12 2z"/></svg><b id="streakNum">0</b></div>
+        <div class="chip2" title="Rest Leaves"><svg viewBox="0 0 24 24" fill="none" stroke="#4fbf7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19C5 10 11 5 20 5c0 9-5 15-13 15"/><path d="M5 19c3-5 6-8 10-10"/></svg><b id="leafNum">0</b></div>
+        <button id="muteBtn" class="iconBtn" aria-label="Sound"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 9v6h4l5 4V5L8 9z"/><path class="wave" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M16 9a4 4 0 0 1 0 6M18.500 6.500a8 8 0 0 1 0 11"/><path class="slash" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M16 9l5 6M21 9l-5 6"/></svg></button>
+        <button id="helpBtn" class="iconBtn" aria-label="How to play"><b>?</b></button>
+      </div>
+    </header>
+    <div id="scene"></div>
+    <div class="homeInfo">
+      <p id="greeting"></p>
+      <p id="proverb" class="proverb"></p>
+      <p id="streakText"></p>
+      <p id="message" class="message"></p>
+    </div>
+    <button id="beginBtn" class="bigBtn">Play today's puzzle</button>
+  </section>
+
+  <!-- PUZZLE -->
+  <section id="puzzleScreen" class="screen hidden">
+    <div id="puzzleLayout">
+      <div id="refPanel">
+        <img id="refImg" alt="The picture you are rebuilding">
+        <div class="refText"><small>Your goal</small><b id="refName"></b><span id="progress"></span></div>
+      </div>
+      <div>
+        <p id="puzzleHint" class="message"></p>
+        <div id="boardWrap"><div id="board"></div></div>
+      </div>
+    </div>
+    <div class="row">
+      <button id="peekBtn" class="secondary hidden">Peek at goal</button>
+      <button id="backBtn" class="secondary">Back</button>
+    </div>
+  </section>
+
+  <!-- JOURNAL -->
+  <section id="journalScreen" class="screen hidden">
+    <h2>Heritage Journal</h2>
+    <p class="message">Go back and fetch what you've restored.</p>
+    <div id="journalGrid"></div>
+    <button id="journalBack" class="secondary">Home</button>
+  </section>
+
+  <!-- EXPLORE -->
+  <section id="exploreScreen" class="screen hidden">
+    <h2>Explore</h2>
+    <p class="message">Free play: pick a pack, a size and any puzzle.</p>
+    <div id="exCats"></div>
+    <div id="exSizes">
+      <button class="chip" data-s="3">3×3</button><button class="chip" data-s="4">4×4</button><button class="chip" data-s="5">5×5</button>
+    </div>
+    <div id="exGrid"></div>
+    <button id="exBack" class="secondary">Home</button>
+  </section>
+
+  <!-- HERITAGE CARD -->
+  <div id="card" class="hidden">
+    <div class="cardBox">
+      <img id="cardImg" alt="">
+      <h2 id="cardTitle"></h2>
+      <p id="cardReward" class="reward"></p>
+      <p id="cardFact"></p>
+      <small id="cardSource"></small>
+      <div class="row">
+        <button id="shareBtn" class="secondary">Share</button>
+        <button id="cardContinue">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW TO PLAY -->
+  <div id="tutorial" class="hidden"><div class="cardBox">
+    <h2>How to play</h2>
+    <p>1. Tap a tile next to the empty space to slide it.</p>
+    <p>2. Rebuild the picture. No timer, no pressure.</p>
+    <p>3. Learn a fact, grow your sanctuary and keep your daily streak.</p>
+    <button id="tutOk">Let's go</button>
+  </div></div>
+
+  <div id="toast" class="hidden"></div>
+
+  <!-- BOTTOM TAB BAR -->
+  <nav id="tabbar">
+    <button class="tab" id="tabHome" data-s="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Home</button>
+    <button class="tab" id="tabExplore" data-s="exploreScreen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.500 8.500l-2 5-5 2 2-5z"/></svg>Explore</button>
+    <button class="tab" id="tabRace" data-s="raceMenu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4m0 0h11l-2 4 2 4H5"/></svg>Race</button>
+    <button class="tab" id="tabJournal" data-s="journalScreen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19a2 2 0 0 1 2-2h13"/></svg>Journal</button>
+  </nav>
+
+  <!-- DEBUG (tap the logo 5 times) -->
+  <div id="debug" class="hidden">
+    <input id="dbgDate" placeholder="YYYY-MM-DD">
+    <button id="dbgSet">Set date</button>
+    <button id="dbgNext">+1 day</button>
+    <button id="dbgSolve">Solve now</button>
+    <button id="dbgAuto">Skip: solve next day</button>
+    <button id="dbgLeaf">+1 Rest Leaf</button>
+    <button id="dbgReset">Reset save</button>
+    <small id="dbgInfo"></small>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="game.js"></script>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="race.js"></script>
+</body>
+</html>
