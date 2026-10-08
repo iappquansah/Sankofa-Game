@@ -95,7 +95,10 @@ body[data-screen="journalScreen"] .tab[data-s="journalScreen"] svg, body[data-sc
 @media (min-width:800px) { #puzzleLayout { flex-direction:row; align-items:flex-start; gap:28px; } #refPanel { flex-direction:column; padding:14px; } #refPanel img { width:220px; height:220px; } .refText { text-align:center; align-items:center; } }
 #boardWrap { position:relative; width:min(92vw,420px); height:min(92vw,420px); padding:10px; border-radius:24px; background:#120c20; box-shadow:inset 0 3px 10px rgba(0,0,0,.6), 0 6px 0 var(--bg2); }
 #board { width:100%; height:100%; display:grid; gap:3px; transition:gap .8s; }
-.tile { background-image: var(--puzzle-img); background-repeat:no-repeat; border-radius:9px; cursor:pointer; display:grid; place-items:end start; padding:4px; font-weight:700; font-size:.9rem; text-shadow:0 1px 3px #000;
+.tile { background-image: var(--puzzle-img); 
+  background-repeat: no-repeat; 
+  border-radius: 9px; 
+  cursor: pointer;background-repeat:no-repeat; border-radius:9px; cursor:pointer; display:grid; place-items:end start; padding:4px; font-weight:700; font-size:.9rem; text-shadow:0 1px 3px #000;
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.18), 0 2px 4px rgba(0,0,0,.35); transition:transform .12s; }
 .tile:active { transform:scale(.96); }
 .tile.void { visibility:hidden; }
@@ -187,3 +190,11 @@ body[data-screen="journalScreen"] .tab[data-s="journalScreen"] svg, body[data-sc
 .playBlock { display:flex; flex-direction:column; align-items:center; gap:8px; }
 #playSub { font-size:.8rem; opacity:.65; }
 .bigBtn.secondary { animation:none; }
+
+/* ===== Daily Challenge (v8) ===== */
+.dailyCard { grid-column:1 / -1; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; border-radius:18px; text-align:left; cursor:pointer;
+  background:linear-gradient(135deg,#e8663d,#b8432a); box-shadow:0 4px 0 #1f1636; transition:transform .1s, box-shadow .1s; }
+.dailyCard:active { transform:translateY(3px); box-shadow:0 1px 0 #1f1636; }
+.dailyCard small { display:block; opacity:.85; font-size:.68rem; text-transform:uppercase; letter-spacing:.12em; margin-bottom:3px; }
+.dailyCard b { font:600 .95rem/1.2 "Fredoka","Nunito",ui-rounded,system-ui,sans-serif; }
+.dailyGo { background:var(--cream); color:var(--ink); padding:8px 14px; border-radius:14px; white-space:nowrap; font:600 .85rem "Fredoka","Nunito",ui-rounded,system-ui,sans-serif; }      

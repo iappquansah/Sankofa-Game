@@ -9,13 +9,16 @@ const DEFAULT_SAVE = {
   sanctuary: [],       // reward indexes placed in the sanctuary
   journal: [],         // puzzle indexes restored at least once
   deep: [],            // puzzle indexes whose deeper fact is unlocked
+  pb: {},              // personal best times (ms), key "puzzleIndex-size"
+  daily: null,         // today's best Daily Challenge result
   muted: false
 };
 function loadSave() {
+  const fresh = JSON.parse(JSON.stringify(DEFAULT_SAVE));
   try {
     const raw = localStorage.getItem("sankofa-save");
-    return raw ? { ...DEFAULT_SAVE, ...JSON.parse(raw) } : { ...DEFAULT_SAVE };
-  } catch (e) { return { ...DEFAULT_SAVE }; }
+    return raw ? { ...fresh, ...JSON.parse(raw) } : fresh;
+  } catch (e) { return fresh; }
 }
 function writeSave() {
   try { localStorage.setItem("sankofa-save", JSON.stringify(save)); } catch (e) {}
@@ -215,6 +218,24 @@ const board = $("board");
 let puzzle, puzzleIdx = 0, counter = 0, replay = false, solved = false, twist = "Classic";
 let order = [], lastMove = null, memTimer;
 
+// ----- Seeded shuffles + Daily Challenge helpers -----
+function hashStr(s) { let h = 2166136261; for (const ch of s) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+// Same puzzle, size and shuffle for everyone on the same calendar date
+function dailyInfo() {
+  const date = todayStr(), seed = hashStr("sankofa-" + date), dow = nowDate().getDay();
+  return { date, idx: seed % PUZZLES.length, size: (dow === 0 || dow === 6) ? 4 : 3, seed };
+}
+const fmtTime = ms => { const s = Math.round(ms / 1000); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+let startTime = 0, tick = null, dailyRun = false, lastShareText = "";
+
 // Difficulty ladder: [from puzzle #, grid size, scramble moves]. Grows as you keep your habit.
 const LEVELS = [[0, 3, 14], [2, 3, 30], [4, 3, 60], [7, 4, 50], [10, 4, 90], [14, 4, 140], [20, 5, 180]];
 // A different twist every day, cycling.
@@ -234,13 +255,13 @@ const neighbors = p => [...Array(TOTAL).keys()].filter(q => adjacent(p, q));
 const correctCount = arr => arr.filter((v, i) => v === i).length;
 
 // Scramble with real slides from the finished picture, so it is always solvable
-function scramble(moves) {
+function scramble(moves, rnd = Math.random) {
   let a;
   do {
     a = [...Array(TOTAL).keys()];
     let e = TOTAL - 1, prev = -1;
     for (let k = 0; k < moves; k++) {
-      const nb = neighbors(e).filter(q => q !== prev), q = nb[Math.floor(Math.random() * nb.length)];
+      const nb = neighbors(e).filter(q => q !== prev), q = nb[Math.floor(rnd() * nb.length)];
       [a[e], a[q]] = [a[q], a[e]]; prev = e; e = q;
     }
   } while (correctCount(a) > TOTAL - 3);
@@ -256,7 +277,7 @@ $("peekBtn").onclick = () => setupMemory(true) || ($("refImg").classList.remove(
 
 let exploreMode = false;
 async function startPuzzle(opts) {
-  exploreMode = !!opts;
+  exploreMode = !!opts; dailyRun = !!(opts && opts.daily); clearInterval(tick);
   replay = exploreMode || doneToday();
   counter = exploreMode ? 99 : Math.max(0, replay ? save.puzzleIndex - 1 : save.puzzleIndex);
   puzzleIdx = exploreMode ? opts.idx : counter % PUZZLES.length; puzzle = PUZZLES[puzzleIdx];
@@ -265,13 +286,15 @@ async function startPuzzle(opts) {
     tw = exploreMode ? TWISTS[0] : twistFor(counter);
   SIZE = size; TOTAL = size * size; twist = tw.n;
   $("refImg").src = puzzle.sq || puzzle.image; $("refName").textContent = puzzle.name;
-  order = scramble(moves); lastMove = null; solved = false;
+  order = scramble(moves, opts && opts.seed != null ? mulberry32(opts.seed) : Math.random); lastMove = null; solved = false;
   board.className = "";
   board.style.gridTemplateColumns = board.style.gridTemplateRows = `repeat(${SIZE}, 1fr)`;
   setupMemory(twist === "Memory");
   $("puzzleHint").textContent = "Breathe in… 🌬️";
   setTimeout(() => { if (!solved) $("puzzleHint").textContent = `Today: ${tw.n} (${SIZE}×${SIZE}). ${tw.d}`; }, 2500);
   renderBoard(); showScreen("puzzleScreen");
+  startTime = Date.now();
+  if (dailyRun) tick = setInterval(() => { if (!solved) $("puzzleHint").textContent = "Daily Challenge · " + fmtTime(Date.now() - startTime); }, 500);
 }
 function renderBoard() {
   board.innerHTML = "";
@@ -290,7 +313,7 @@ function renderBoard() {
       if (lastMove && lastMove.to === pos) c += " slide";
     }
     d.className = c;
-    //d.style.backgroundImage = `url(${puzzle.sq || puzzle.image})`;
+    // d.style.backgroundImage = `url(${puzzle.sq || puzzle.image})`;
     d.style.backgroundSize = `${SIZE * 100}% ${SIZE * 100}%`;
     d.style.backgroundPosition = `${colOf(t) * 100 / (SIZE - 1)}% ${rowOf(t) * 100 / (SIZE - 1)}%`;
     if (twist === "Numbered" && !solved) d.textContent = t + 1;
@@ -312,7 +335,7 @@ function onTileClick(pos) {
   if (window.raceActive) { raceMove(); return; }
   if (correctCount(order) === TOTAL) { lastMove = null; onWin(); }
 }
-$("backBtn").onclick = () => { clearTimeout(memTimer); if (exploreMode) { renderExplore(); showScreen("exploreScreen"); } else { refreshHome(); showScreen("home"); } };
+$("backBtn").onclick = () => { clearTimeout(memTimer); clearInterval(tick); if (exploreMode) { renderExplore(); showScreen("exploreScreen"); } else { refreshHome(); showScreen("home"); } };
 
 function confetti() {
   const em = ["✨", "🌟", "🌺", "🍃", "🟡"];
@@ -339,7 +362,23 @@ function onWin() {
     save.puzzleIndex++;
     writeSave();
   }
-  setTimeout(() => exploreMode ? showCard(puzzleIdx, false, null, "explore", true) : showCard(puzzleIdx, cycle >= 1, reward, "home"), 1600);
+  let note = "";
+  if (exploreMode) {
+    const ms = Date.now() - startTime, key = puzzleIdx + "-" + SIZE, old = save.pb[key];
+    clearInterval(tick);
+    if (old == null || ms < old) save.pb[key] = ms;
+    note = `Time ${fmtTime(ms)} · ` + (old == null ? "first clear" : ms < old ? "new best!" : "best " + fmtTime(old));
+    lastShareText = "";
+    if (dailyRun) {
+      if (!save.daily || save.daily.date !== todayStr() || ms < save.daily.ms) save.daily = { date: todayStr(), ms, size: SIZE };
+      lastShareText = `Sankofa Sanctuary Daily #${daysBetween("2026-10-01", todayStr()) + 1}\n${SIZE}×${SIZE} · ${fmtTime(ms)}\n${location.origin}${location.pathname}`;
+    }
+    writeSave();
+  } else lastShareText = "";
+  setTimeout(() => {
+    exploreMode ? showCard(puzzleIdx, false, null, "explore", true) : showCard(puzzleIdx, cycle >= 1, reward, "home");
+    if (note) $("cardReward").textContent = note;
+  }, 1600);
 }
 
 /* ---------- HERITAGE CARD ---------- */
@@ -373,6 +412,11 @@ function wrapText(ctx, text, x, y, maxW, lineH) {
   ctx.fillText(line, x, y);
 }
 $("shareBtn").onclick = async () => {
+  if (lastShareText) {
+    if (navigator.share) { try { await navigator.share({ text: lastShareText }); } catch (e) {} }
+    else { try { await navigator.clipboard.writeText(lastShareText); toast("Result copied"); } catch (e) {} }
+    return;
+  }
   const img = new Image(); img.src = cardPuzzle.sq || await squareImage(cardPuzzle.image);
   try { await img.decode(); } catch (e) {}
   const c = document.createElement("canvas"); c.width = 1080; c.height = 1400;
@@ -416,7 +460,7 @@ function renderExplore() {
   const packs = CATEGORIES.map(c => ({ ...c, n: PUZZLES.filter(p => p.cat === c.id).length })).filter(c => c.n);
   const tabs = [{ id: "all", name: "All", n: PUZZLES.length }, ...packs];
   const bar = $("packTabs");
-  bar.innerHTML = tabs.map(c => `<button class="packTab${exCat === c.id ? " on" : ""}" data-id="${c.id}">${c.name}<em>${c.n}</em></button>`).join("");
+  bar.innerHTML = tabs.map(c => `<button class="packTab${exCat === c.id ? " on" : ""}" data-id="${c.id}">${c.name}</button>`).join("");
   bar.querySelectorAll(".packTab").forEach(b => b.onclick = () => { exCat = b.dataset.id; renderExplore(); });
   const on = bar.querySelector(".on");
   if (on) bar.scrollLeft = on.offsetLeft - (bar.clientWidth - on.offsetWidth) / 2;
@@ -427,28 +471,26 @@ function renderExplore() {
   });
 
   const list = $("exList"); list.innerHTML = "";
+  const dc = dailyInfo(), best = save.daily && save.daily.date === dc.date ? save.daily.ms : null;
+  const banner = document.createElement("div");
+  banner.className = "dailyCard";
+  banner.innerHTML = `<div><small>Daily Challenge</small><b>Same puzzle for everyone · ${dc.size}×${dc.size}</b></div><span class="dailyGo">${best != null ? "Best " + fmtTime(best) : "Play"}</span>`;
+  banner.onclick = () => startPuzzle({ idx: dc.idx, size: dc.size, seed: dc.seed, daily: true });
+  list.appendChild(banner);
   let shown = 0;
   PUZZLES.forEach((p, i) => {
     if (exCat !== "all" && p.cat !== exCat) return;
     shown++;
-    // const card = document.createElement("div"); card.className = "exCard";
-    // const img = document.createElement("div"); img.className = "exImg"; img.style.backgroundImage = `url(${p.image})`;
-    // const info = document.createElement("div"); info.className = "exInfo";
-    // const name = document.createElement("b"); name.textContent = p.name;
-    // const tag = document.createElement("small"); tag.textContent = names[p.cat] || "";
-    // info.append(name, tag); card.append(img, info);
-
     const card = document.createElement("div"); card.className = "exCard";
-card.style.backgroundImage = `url(${p.image})`;
-const name = document.createElement("span"); name.className = "exName"; name.textContent = p.name;
-card.append(name);
-
-    if (save.journal.includes(i)) card.insertAdjacentHTML("beforeend",
-      '<div class="exDone"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></div>');
+    card.style.backgroundImage = `url(${p.image})`;
+    const name = document.createElement("span"); name.className = "exName"; name.textContent = p.name;
+    card.append(name);
+    // if (save.journal.includes(i)) card.insertAdjacentHTML("beforeend",
+    //   '<div class="exDone"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></div>');
     card.onclick = () => startPuzzle({ idx: i, size: exSize });
     list.appendChild(card);
   });
-  $("exCount").textContent = `${shown} puzzle${shown === 1 ? "" : "s"}`;
+  // $("exCount").textContent = `${shown} puzzle${shown === 1 ? "" : "s"}`;
 }
 $("tabExplore").onclick = () => { renderExplore(); showScreen("exploreScreen"); };
 $("tabHome").onclick = () => { refreshHome(); showScreen("home"); };
