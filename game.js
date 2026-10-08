@@ -156,26 +156,39 @@ function renderSanctuary(quiet) {
     scene.appendChild(el);
   });
 }
+function renderWeek() {
+  const t = todayStr(), row = $("weekRow");
+  row.innerHTML = "";
+  for (let k = 6; k >= 0; k--) {
+    const day = addDays(t, -k);
+    const off = save.lastPlayed ? daysBetween(day, save.lastPlayed) : -1;
+    const done = off >= 0 && off < save.streak;
+    const [y, m, d] = day.split("-").map(Number);
+    row.insertAdjacentHTML("beforeend",
+      `<div class="wd${done ? " done" : ""}${k === 0 ? " today" : ""}"><i></i><span>${"SMTWTFS"[new Date(y, m - 1, d).getDay()]}</span></div>`);
+  }
+}
 function refreshHome() {
-  const d = nowDate(), dow = d.getDay();
-  $("greeting").textContent = `Akwaaba! Today is ${DAY_NAMES[dow]} (${DAY_ENGLISH[dow]}).`;
-  const dayNum = Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
-  $("proverb").textContent = "“" + PROVERBS[dayNum % PROVERBS.length] + "”";
+  const missed = missedDays(), broken = missed > save.restLeaves, done = doneToday();
+  $("streakNum").textContent = save.streak;
+  $("leafNum").textContent = save.restLeaves;
+  $("leafChip").classList.toggle("hidden", save.restLeaves < 1);
 
-  const missed = missedDays();
-  const broken = missed > save.restLeaves;
-  const leaves = "🍃".repeat(save.restLeaves) || "none";
-  $("streakNum").textContent = save.streak; $("leafNum").textContent = save.restLeaves;
-  $("streakText").textContent = save.bestStreak ? `Best streak: ${save.bestStreak}` : "";
+  let pill = "";
+  if (done) pill = "Done for today. See you tomorrow";
+  else if (save.lastPlayed && broken) pill = "Welcome back. A new streak starts today";
+  else if (missed > 0) pill = `A Rest Leaf covers your ${missed} missed day${missed > 1 ? "s" : ""}`;
+  $("statePill").textContent = pill;
+  $("statePill").classList.toggle("hidden", !pill);
 
-  let msg = "";
-  if (doneToday()) msg = "You restored today's piece. Come back tomorrow. 🌙";
-  else if (save.lastPlayed && broken) msg = "Your sanctuary is resting. Welcome back, a new streak begins today.";
-  else if (missed > 0) msg = `Rest Leaves will cover your ${missed} missed day${missed > 1 ? "s" : ""}.`;
-  $("message").textContent = msg || ("Today's challenge: " + challengeText(doneToday() ? save.puzzleIndex : save.puzzleIndex));
+  const c = save.puzzleIndex, pack = CATEGORIES.find(x => x.id === PUZZLES[c % PUZZLES.length].cat);
+  $("beginBtn").textContent = done ? "Play again" : "Play today's puzzle";
+  $("beginBtn").classList.toggle("secondary", done);
+  $("playSub").textContent = done ? "Just for calm. Your streak is safe"
+    : `${pack ? pack.name : ""} · ${levelFor(c)[1]}×${levelFor(c)[1]} · ${twistFor(c).n}`;
 
-  $("beginBtn").textContent = doneToday() ? "Play again, just for calm" : "Play today's puzzle";
-  renderSanctuary(broken && !!save.lastPlayed && !doneToday());
+  renderWeek();
+  renderSanctuary(broken && !!save.lastPlayed && !done);
   $("dbgInfo").textContent = `date: ${todayStr()} · leaves: ${save.restLeaves}`;
   updateMuteLabel();
 }
