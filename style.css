@@ -551,3 +551,71 @@ body.calib .tier { cursor: crosshair; }
 /* first tile of each zone: picture visible even before the zone is reached */
 .tier .node.locked.preview .nCard { opacity: 1; }
 .tier .node.locked.preview .nCard::after { content: none; }
+#cardReward:empty { display: none; }
+#puzzleHint:empty { display: none; }
+
+/* ===== EXPLORE TILES: 3D LOOK ===== */
+#exList { gap: 14px; padding-bottom: 14px; perspective: 800px; }
+
+.exCard {
+  border: 0;
+  border-radius: 20px;
+  outline: 0;
+  transform: rotateX(4deg);
+  transform-origin: 50% 100%;
+  /* thick solid edge underneath, then a soft drop shadow, then a bright top bevel */
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.35),
+    inset 0 -3px 6px rgba(0,0,0,.35),
+    0 3px 0 #3a2a66,
+    0 6px 0 #231a40,
+    0 12px 16px rgba(0,0,0,.45);
+  transition: transform .12s, box-shadow .12s;
+}
+
+/* glossy highlight across the top of the tile */
+.exCard::before {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(160deg, rgba(255,255,255,.28) 0%, rgba(255,255,255,.06) 28%, rgba(255,255,255,0) 45%);
+}
+
+/* pressed: the block sinks down into its edge */
+.exCard:active {
+  transform: translateY(5px) rotateX(0deg);
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.25),
+    inset 0 -2px 4px rgba(0,0,0,.35),
+    0 1px 0 #3a2a66,
+    0 2px 0 #231a40,
+    0 4px 6px rgba(0,0,0,.4);
+}
+
+@media (hover: hover) {
+  .exCard:hover { transform: translateY(-3px) rotateX(2deg); }
+}
+
+/* ===== EXPLORE TILES: COLOURED GLOW ONLY ===== */
+.exCard[data-cat="culture"]      { --cc:#ff7ac8; }
+.exCard[data-cat="history"]      { --cc:#ffb347; }
+.exCard[data-cat="nature"]       { --cc:#6af09a; }
+.exCard[data-cat="tourism"]      { --cc:#6ecbff; }
+.exCard[data-cat="sports"]       { --cc:#ff6a5a; }
+.exCard[data-cat="cars"]         { --cc:#3fe0cf; }
+.exCard[data-cat="space"]        { --cc:#a58aff; }
+.exCard[data-cat="food"]         { --cc:#ffd83a; }
+.exCard[data-cat="architecture"] { --cc:#d6def5; }
+
+/* more room between tiles so glows never touch */
+#exList { gap: 20px; padding: 6px 6px 18px; }
+
+.exCard {
+  --cc: #ffc94a;
+  border: 3px solid var(--cc);
+  border-radius: 18px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.45), 0 0 12px var(--cc), 0 0 22px color-mix(in srgb, var(--cc) 40%, transparent);
+}
+.exCard:active {
+  transform: scale(.97);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.45), 0 0 6px var(--cc);
+}

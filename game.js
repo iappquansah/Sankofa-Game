@@ -736,8 +736,14 @@ async function startPuzzle(opts) {
   board.className = "";
   board.style.gridTemplateColumns = board.style.gridTemplateRows = `repeat(${SIZE}, 1fr)`;
   setupMemory(twist === "Memory");
+  // $("puzzleHint").textContent = "Breathe in… 🌬️";
+  // setTimeout(() => { if (!solved) $("puzzleHint").textContent = `Today: ${tw.n} (${SIZE}×${SIZE}). ${tw.d}`; }, 2500);
+  if (exploreMode) {
+  $("puzzleHint").textContent = "";
+} else {
   $("puzzleHint").textContent = "Breathe in… 🌬️";
   setTimeout(() => { if (!solved) $("puzzleHint").textContent = `Today: ${tw.n} (${SIZE}×${SIZE}). ${tw.d}`; }, 2500);
+}
   renderBoard(); showScreen("puzzleScreen");
   startTime = Date.now();
   if (dailyRun) tick = setInterval(() => { if (!solved) $("puzzleHint").textContent = "Daily Challenge · " + fmtTime(Date.now() - startTime); }, 500);
@@ -836,7 +842,8 @@ function showCard(idx, deep, reward, returnTo, both) {
   $("cardTitle").textContent = p.name;
   $("cardFact").textContent = cardText;
   $("cardSource").textContent = p.visit ? "📍 " + p.visit : "";
- $("cardReward").textContent = reward ? "Your sanctuary grew: " + reward.name : "";
+//  $("cardReward").textContent = reward ? "Your sanctuary grew: " + reward.name : "";
+$("cardReward").textContent = "";
   $("card").classList.remove("hidden");
 }
 $("cardContinue").onclick = () => {
@@ -927,6 +934,7 @@ function renderExplore() {
     if (exCat !== "all" && p.cat !== exCat) return;
     shown++;
     const card = document.createElement("div"); card.className = "exCard";
+    card.dataset.cat = p.cat;
     card.style.backgroundImage = `url(${p.image})`;
     const name = document.createElement("span"); name.className = "exName"; name.textContent = p.name;
     card.append(name);
