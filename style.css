@@ -313,9 +313,10 @@ body[data-screen="journalScreen"] .tab[data-s="journalScreen"] svg, body[data-sc
 .terrain { object-fit: cover; z-index: 0; }
 .pathArt { object-fit: fill; z-index: 0; }
 .tier.hasPath .trail { display: none; }
-.tier.locked .terrain, .tier.locked .pathArt { filter: grayscale(1) brightness(.6); }
-.tier.s0 .terrain { opacity: .55; }
-.tier.s1 .terrain, .tier.s2 .terrain { opacity: .8; }
+.tier.locked .terrain, .tier.locked .pathArt { filter: grayscale(.5) brightness(.86); }
+/* .tier.s0 .terrain { opacity: .55; }
+.tier.s1 .terrain, .tier.s2 .terrain { opacity: .8; } */
+.tier.locked .terrain { opacity: .55; }
 
 /* sanctuary life */
 .prop2 { position: absolute; z-index: 1; cursor: pointer; transform: translateX(-50%); }
@@ -376,7 +377,7 @@ body.calib .tier { cursor: crosshair; }
 .node:active { transform: translate(-50%, -50%) scale(.95); box-shadow: none; }
 
 /* 3. Inline widths on sprites were stretching these images */
-.tierHead img { height: 34px; width: auto !important; }
+.tierHead img { height: 34px; width: auto !important;  }
 .node .pin img { height: 20px; width: auto !important; }
 
 /* 4. The old .plot rule adds a top margin */
@@ -546,3 +547,7 @@ body.calib .tier { cursor: crosshair; }
 #sheet[data-state="locked"] #sheetBtn { background: var(--card); color: var(--cream); box-shadow: 0 5px 0 #1f1636; }
 
 #playSub { display: none; }
+
+/* first tile of each zone: picture visible even before the zone is reached */
+.tier .node.locked.preview .nCard { opacity: 1; }
+.tier .node.locked.preview .nCard::after { content: none; }

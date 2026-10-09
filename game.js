@@ -25,6 +25,12 @@ function writeSave() {
 }
 let save = loadSave();
 
+/* ---------- PLAY ORDER: finish one category, then move up to the next ---------- */
+const PLAY_ORDER = CATEGORIES.flatMap(c =>
+  PUZZLES.map((p, i) => ({ p, i })).filter(o => o.p.cat === c.id).map(o => o.i)
+);
+const puzzleAt = n => PLAY_ORDER[n % PLAY_ORDER.length];
+
 /* ---------- DATES (calendar dates, not 24h math) ---------- */
 let debugDate = null;
 function nowDate() {
@@ -420,7 +426,8 @@ function renderSanctuary(quiet) {
   if (sig === lastSig && $("scene").querySelector(".climb")) return;   // nothing changed, leave the map alone
   lastSig = sig;
   const scene = $("scene"), n = save.sanctuary.length;
-  const cur = save.puzzleIndex % PUZZLES.length, today = doneToday();
+  // const cur = save.puzzleIndex % PUZZLES.length, today = doneToday();
+  const cur = puzzleAt(save.puzzleIndex), today = doneToday();
   if (n !== climbN) { climbTop = null; climbN = n; }          // recentre when something new is built
 
   scene.removeAttribute("style");
@@ -526,17 +533,24 @@ function renderSanctuary(quiet) {
 
     // puzzle nodes
     list.forEach((o, j) => {
+      // const state = save.journal.includes(o.i) ? "done" : (o.i === cur ? "current" : "locked");
+      // const node = document.createElement("button");
+      // node.className = "node " + state;
       const state = save.journal.includes(o.i) ? "done" : (o.i === cur ? "current" : "locked");
-      const node = document.createElement("button");
-      node.className = "node " + state;
+const preview = state === "locked" && j === 0;      // first stop of every zone always shows its picture
+const node = document.createElement("button");
+node.className = "node " + state + (preview ? " preview" : "");
       node.style.left = pos[j].x + "%"; node.style.top = pos[j].y + "%";
       node.setAttribute("aria-label", state === "locked" ? `${c.name} puzzle, locked` : o.p.name);
       const pin = document.createElement("div"); pin.className = "pin";
       pin.appendChild(sprite("zone-map", 20, () => { const s = document.createElement("span"); s.textContent = "📍"; return s; }));
       const card = document.createElement("div"); card.className = "nCard";
-      if (state !== "locked") card.style.backgroundImage = `url(${o.p.image})`;
-      const nm = document.createElement("span"); nm.className = "nName";
-      nm.textContent = state === "locked" ? "???" : o.p.name;
+      // if (state !== "locked") card.style.backgroundImage = `url(${o.p.image})`;
+      // const nm = document.createElement("span"); nm.className = "nName";
+      // nm.textContent = state === "locked" ? "???" : o.p.name;
+      if (state !== "locked" || preview) card.style.backgroundImage = `url(${o.p.image})`;
+const nm = document.createElement("span"); nm.className = "nName";
+nm.textContent = (state === "locked" && !preview) ? "???" : o.p.name;
       node.append(pin, card, nm);
       // node.onclick = () => {
       //   if (state === "done") showCard(o.i, false, null, "home", save.deep.includes(o.i));
@@ -613,7 +627,8 @@ function refreshHome() {
   $("statePill").textContent = pill;
   $("statePill").classList.toggle("hidden", !pill);
 
-  const c = save.puzzleIndex, pack = CATEGORIES.find(x => x.id === PUZZLES[c % PUZZLES.length].cat);
+  // const c = save.puzzleIndex, pack = CATEGORIES.find(x => x.id === PUZZLES[c % PUZZLES.length].cat);
+  const c = save.puzzleIndex, pack = CATEGORIES.find(x => x.id === PUZZLES[puzzleAt(c)].cat);
   $("beginBtn").textContent = done ? "Play again" : "Play today's puzzle";
   $("beginBtn").classList.toggle("secondary", done);
   // $("playSub").textContent = done ? "Just for calm. Your streak is safe"
@@ -710,7 +725,8 @@ async function startPuzzle(opts) {
   exploreMode = !!opts; dailyRun = !!(opts && opts.daily); clearInterval(tick);
   replay = exploreMode || doneToday();
   counter = exploreMode ? 99 : Math.max(0, replay ? save.puzzleIndex - 1 : save.puzzleIndex);
-  puzzleIdx = exploreMode ? opts.idx : counter % PUZZLES.length; puzzle = PUZZLES[puzzleIdx];
+  // puzzleIdx = exploreMode ? opts.idx : counter % PUZZLES.length; puzzle = PUZZLES[puzzleIdx];
+  puzzleIdx = exploreMode ? opts.idx : puzzleAt(counter); puzzle = PUZZLES[puzzleIdx];
   if (!puzzle.sq) puzzle.sq = await squareImage(puzzle.image);
   const [, size, moves] = exploreMode ? [0, opts.size, { 3: 40, 4: 90, 5: 180 }[opts.size]] : levelFor(counter),
     tw = exploreMode ? TWISTS[0] : twistFor(counter);
