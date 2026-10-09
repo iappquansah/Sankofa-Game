@@ -7,7 +7,32 @@ window.raceActive = false;
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const fmt = ms => { const s = ms / 1000; return s < 60 ? s.toFixed(1) + "s" : Math.floor(s / 60) + "m " + Math.round(s % 60) + "s"; };
-  const newCode = () => Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join("");
+//   const newCode = () => Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join("");
+//   const PEER_OPTS = {
+//   config: {
+//     iceServers: [
+//       { urls: "stun:stun.l.google.com:19302" },
+//       { urls: "stun:stun1.l.google.com:19302" },
+//       // paste your TURN provider's details here (replace the YOUR-... parts)
+//       { urls: "turn:YOUR-TURN-HOST:80", username: "YOUR-USERNAME", credential: "YOUR-PASSWORD" },
+//       { urls: "turn:YOUR-TURN-HOST:443?transport=tcp", username: "YOUR-USERNAME", credential: "YOUR-PASSWORD" }
+//     ].filter(s => !String(s.urls).includes("YOUR-"))   // ignored until you fill them in
+//   }
+// };
+const newCode = () => Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join("");
+  const TURN_USER = "7745475dcaa24b88b817ea35", TURN_PASS = "T4tnjFZnubzquwcD";
+const PEER_OPTS = {
+  config: {
+    iceServers: [
+      { urls: "stun:stun.relay.metered.ca:80" },
+      { urls: "stun:stun.l.google.com:19302" },
+      { urls: "turn:global.relay.metered.ca:80", username: TURN_USER, credential: TURN_PASS },
+      { urls: "turn:global.relay.metered.ca:80?transport=tcp", username: TURN_USER, credential: TURN_PASS },
+      { urls: "turn:global.relay.metered.ca:443", username: TURN_USER, credential: TURN_PASS },
+      { urls: "turns:global.relay.metered.ca:443?transport=tcp", username: TURN_USER, credential: TURN_PASS }
+    ]
+  }
+};
 
   /* ---------- state ---------- */
   let peer = null, conns = [], hostConn = null, isHost = false, joined = false;
@@ -72,22 +97,43 @@ window.raceActive = false;
   };
 
   /* ---------- connection: HOST ---------- */
+  // function createRoom() {
+  //   if (typeof Peer === "undefined") return say("Racing needs an internet connection.");
+  //   cleanup(); isHost = true; myId = "host"; room = newCode();
+  //   const name = getName(); say("Creating room…");
+  //   peer = new Peer("sankofa-" + room);
+  //   peer.on("open", () => {
+  //     players = { host: { name, n: 0, ms: null } };
+  //     phase = "lobby"; winner = null; cfg = { size: +$("optSize").value, pidx: -1 };
+  //     openLobby();
+  //   });
+  //   peer.on("connection", onGuest);
+  //   peer.on("error", e => {
+  //     if (e.type === "unavailable-id") createRoom();
+  //     else say("Couldn't reach the matchmaking server. Check your internet.");
+  //   });
+  // }
   function createRoom() {
-    if (typeof Peer === "undefined") return say("Racing needs an internet connection.");
-    cleanup(); isHost = true; myId = "host"; room = newCode();
-    const name = getName(); say("Creating room…");
-    peer = new Peer("sankofa-" + room);
-    peer.on("open", () => {
-      players = { host: { name, n: 0, ms: null } };
-      phase = "lobby"; winner = null; cfg = { size: +$("optSize").value, pidx: -1 };
-      openLobby();
-    });
-    peer.on("connection", onGuest);
-    peer.on("error", e => {
-      if (e.type === "unavailable-id") createRoom();
-      else say("Couldn't reach the matchmaking server. Check your internet.");
-    });
-  }
+  if (typeof Peer === "undefined") return say("Racing needs an internet connection.");
+  cleanup(); isHost = true; myId = "host"; room = newCode();
+  const name = getName(); say("Creating room…");
+  peer = new Peer("sankofa-" + room, PEER_OPTS);
+  const t = setTimeout(() => {
+    if (peer && !peer.open) say("Can't reach the matchmaking server. Check your internet and try again.");
+  }, 10000);
+  peer.on("open", () => {
+    clearTimeout(t);
+    players = { host: { name, n: 0, ms: null } };
+    phase = "lobby"; winner = null; cfg = { size: +$("optSize").value, pidx: -1 };
+    openLobby();
+  });
+  peer.on("connection", onGuest);
+  peer.on("error", e => {
+    clearTimeout(t);
+    if (e.type === "unavailable-id") createRoom();
+    else say("Couldn't reach the matchmaking server. Check your internet.");
+  });
+}
   function onGuest(c) {
     c.on("data", m => hostData(c, m));
     c.on("close", () => {
@@ -127,22 +173,49 @@ window.raceActive = false;
   }
 
   /* ---------- connection: GUEST ---------- */
+  // function joinRoom() {
+  //   const code = $("raceCode").value.trim().toUpperCase();
+  //   if (typeof Peer === "undefined") return say("Racing needs an internet connection.");
+  //   if (code.length < 4) return say("Enter your friend's room code.");
+  //   cleanup(); isHost = false; room = code;
+  //   const name = getName(); say("Connecting…");
+  //   peer = new Peer();
+  //   peer.on("open", id => {
+  //     myId = id;
+  //     hostConn = peer.connect("sankofa-" + room, { reliable: true });
+  //     hostConn.on("open", () => hostConn.send({ t: "join", name }));
+  //     hostConn.on("data", guestData);
+  //     hostConn.on("close", () => { if (room) { leave(true); say("The host left the room."); } });
+  //   });
+  //   peer.on("error", e => say(e.type === "peer-unavailable" ? "Room not found. Check the code." : "Couldn't connect. Check your internet."));
+  // }
   function joinRoom() {
-    const code = $("raceCode").value.trim().toUpperCase();
-    if (typeof Peer === "undefined") return say("Racing needs an internet connection.");
-    if (code.length < 4) return say("Enter your friend's room code.");
-    cleanup(); isHost = false; room = code;
-    const name = getName(); say("Connecting…");
-    peer = new Peer();
-    peer.on("open", id => {
-      myId = id;
-      hostConn = peer.connect("sankofa-" + room, { reliable: true });
-      hostConn.on("open", () => hostConn.send({ t: "join", name }));
-      hostConn.on("data", guestData);
-      hostConn.on("close", () => { if (room) { leave(true); say("The host left the room."); } });
-    });
-    peer.on("error", e => say(e.type === "peer-unavailable" ? "Room not found. Check the code." : "Couldn't connect. Check your internet."));
-  }
+  const code = $("raceCode").value.trim().toUpperCase();
+  if (typeof Peer === "undefined") return say("Racing needs an internet connection.");
+  if (code.length < 4) return say("Enter your friend's room code.");
+  cleanup(); isHost = false; room = code;
+  const name = getName(); say("Connecting…");
+  peer = new Peer(undefined, PEER_OPTS);
+  let t = setTimeout(() => {
+    if (peer && !peer.open) say("Can't reach the matchmaking server. Check your internet and try again.");
+  }, 10000);
+  peer.on("open", id => {
+    clearTimeout(t); myId = id;
+    hostConn = peer.connect("sankofa-" + room, { reliable: true });
+    t = setTimeout(() => {                       // never got a reply from the host
+      if (!joined) { leave(true); say("Couldn't connect to your friend. Check the code and try again."); }
+    }, 15000);
+    hostConn.on("open", () => hostConn.send({ t: "join", name }));
+    hostConn.on("data", m => { clearTimeout(t); guestData(m); });
+    hostConn.on("close", () => { if (room) { leave(true); say("The host left the room."); } });
+    hostConn.on("error", () => say("Connection problem. Try again."));
+  });
+  peer.on("error", e => {
+    clearTimeout(t);
+    say(e.type === "peer-unavailable" ? "Room not found. Check the code." : "Couldn't connect. Check your internet.");
+  });
+}
+
   function guestData(m) {
     if (m.t === "full") { leave(true); say("Room is full, or the race already started."); }
     else if (m.t === "welcome") { myId = m.id; }

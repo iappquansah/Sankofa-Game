@@ -113,7 +113,13 @@ $("muteBtn").onclick = () => {
   save.muted = !save.muted; writeSave(); updateMuteLabel();
   if (save.muted) stopAmbient(); else startAmbient();
 };
-
+// keeps the Play button, map and toasts clear of the tab bar on every phone
+function fitTabbar() {
+  const h = $("tabbar").offsetHeight;
+  if (h) document.documentElement.style.setProperty("--tabH", h + "px");
+}
+window.addEventListener("resize", fitTabbar);
+window.addEventListener("load", fitTabbar);
 /* ---------- SCREENS ---------- */
 function showScreen(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.add("hidden"));
@@ -122,6 +128,7 @@ function showScreen(id) {
   document.body.classList.toggle("nonav", !["home", "exploreScreen", "journalScreen", "raceMenu"].includes(id));
   window.scrollTo(0, 0);
   if (id === "home") applyScroll();
+  fitTabbar();
 }
 let toastTimer;
 function toast(msg) {
@@ -327,12 +334,21 @@ function zonePositions(id, tot, k) {
   return { H, pos };
 }
 
+// function applyScroll() {
+//   const wrap = $("scene").querySelector(".climb"); if (!wrap) return;
+//   if (climbTop != null) wrap.scrollTop = climbTop;
+//   else {
+//     const t = wrap.querySelector(`[data-cat="${climbFocus}"]`);
+//     if (t) wrap.scrollTop = t.offsetTop;
+//   }
+// }
 function applyScroll() {
   const wrap = $("scene").querySelector(".climb"); if (!wrap) return;
-  if (climbTop != null) wrap.scrollTop = climbTop;
-  else {
-    const t = wrap.querySelector(`[data-cat="${climbFocus}"]`);
-    if (t) wrap.scrollTop = t.offsetTop;
+  if (climbTop != null) { wrap.scrollTop = climbTop; return; }
+  const node = wrap.querySelector(".node.current");
+  if (node) {
+    const top = node.getBoundingClientRect().top - wrap.getBoundingClientRect().top + wrap.scrollTop;
+    wrap.scrollTop = Math.max(0, top - wrap.clientHeight * 0.4);   // current stop sits about 40% down the screen
   }
 }
 

@@ -1,5 +1,5 @@
 // Change the version number every time you redeploy, so phones fetch the new files.
-const CACHE = "sankofa-v15";
+const CACHE = "sankofa-v17";
 const FILES = [
   "./",
   "./index.html",
