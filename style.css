@@ -619,3 +619,265 @@ body.calib .tier { cursor: crosshair; }
   transform: scale(.97);
   box-shadow: 0 0 0 1px rgba(0,0,0,.45), 0 0 6px var(--cc);
 }
+
+/* remove the striped bar under the top buttons */
+.hud::after { display: none; }
+.hud { padding-bottom: 0; }
+/* remove the week row */
+#weekRow { display: none; }
+
+/* ===== HOME: FULL-SCREEN MAP ===== */
+#home {
+  position: fixed; inset: 0; display: block;
+  padding: 0; gap: 0; overflow: hidden;
+}
+
+/* map fills the whole screen */
+#home .hero { position: absolute; inset: 0; width: 100%; }
+#home .hero #scene.climbScene {
+  width: 100%; height: 100%; min-height: 0; max-height: none;
+  border-radius: 0; border: 0; box-shadow: none;
+  background: #8a3a6e;               /* same colour as the first (bottom) zone */
+}
+#home .climb { padding-bottom: 160px; } /* lets the first stops scroll clear of the Play button and tab bar */
+
+/* top bar floats over the map */
+#home .hud {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 20;
+  width: 100%; padding: calc(12px + env(safe-area-inset-top)) 14px 28px;
+  background: linear-gradient(rgba(18,12,32,.75), rgba(18,12,32,0));
+  pointer-events: none;
+}
+#home .hud > * { pointer-events: auto; }
+
+/* status pill sits just under the top bar */
+#home .pill {
+  top: calc(64px + env(safe-area-inset-top)); bottom: auto; z-index: 20;
+}
+
+/* Play button floats above the tab bar */
+#home .playBlock {
+  position: absolute; left: 0; right: 0; z-index: 15;
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+#home .playBlock button { pointer-events: auto; }
+
+/* week row is not needed on a full-screen map */
+#weekRow { display: none; }
+
+/* remove the pins above the map tiles */
+.node .pin { display: none; }
+
+/* ===== STATUS PILL: POLISHED ===== */
+#statePill {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 18px 9px 14px; border-radius: 99px;
+  background: linear-gradient(180deg, rgba(64,48,108,.94), rgba(29,21,48,.94));
+  border: 1.5px solid rgba(255,201,74,.55);
+  box-shadow:
+    0 6px 18px rgba(0,0,0,.45),
+    0 0 16px rgba(255,201,74,.22),
+    inset 0 1px 0 rgba(255,255,255,.2);
+  font: 600 .85rem "Fredoka", "Nunito", sans-serif;
+  letter-spacing: .03em; color: var(--cream);
+  text-shadow: 0 1px 2px rgba(0,0,0,.5);
+  animation: pillIn .45s var(--ease) both;
+}
+
+/* glowing gold dot before the text */
+#statePill::before {
+  content: ""; flex: none; width: 9px; height: 9px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff3b0, #ffc94a 60%, #e8963d);
+  box-shadow: 0 0 10px 2px rgba(255,201,74,.7);
+}
+
+@keyframes pillIn { from { opacity: 0; translate: 0 -10px; } }
+
+/* ===== LOGO: POLISHED ===== */
+.logo {
+  display: flex; flex-direction: column; align-items: flex-start;
+  font: 700 1.75rem/1 "Fredoka", "Nunito", sans-serif;
+  letter-spacing: .02em;
+  background: linear-gradient(180deg, #fff3b0 0%, #ffc94a 55%, #e8963d 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 0 rgba(0,0,0,.45)) drop-shadow(0 0 12px rgba(255,201,74,.35));
+}
+
+.logo span {
+  display: flex; align-items: center; gap: 8px; margin-top: 6px;
+  font: 600 .62rem "Fredoka", "Nunito", sans-serif;
+  letter-spacing: .38em; text-transform: uppercase;
+  -webkit-text-fill-color: #fff4e0; color: #fff4e0;
+}
+
+/* thin gold lines either side of "Sanctuary" */
+.logo span::before, .logo span::after {
+  content: ""; height: 1.5px; width: 14px; border-radius: 2px;
+  background: linear-gradient(90deg, rgba(255,201,74,0), #ffc94a);
+}
+.logo span::after { transform: scaleX(-1); }
+
+/* ===== EXPLORE CONTROLS: GAME STYLE (text only) ===== */
+
+/* size selector: separate chunky buttons, no dark trough */
+.seg { background: none; padding: 0; gap: 8px; box-shadow: none; }
+.segBtn {
+  display: inline-block;
+  padding: 8px 14px 9px; border-radius: 13px;
+  background: var(--card); color: var(--cream); opacity: 1;
+  box-shadow: 0 4px 0 #1f1636;
+  font: 600 .85rem "Fredoka", "Nunito", sans-serif;
+  transition: transform .08s, box-shadow .08s, background .15s;
+}
+.segBtn:active { transform: translateY(3px); box-shadow: 0 1px 0 #1f1636; }
+.segBtn.on { background: var(--gold); color: var(--ink); box-shadow: 0 4px 0 var(--gold-d); }
+.segBtn.on:active { box-shadow: 0 1px 0 var(--gold-d); }
+
+/* pack tabs: chunky pills */
+.packTabs { gap: 9px; padding: 4px 16px 8px; }   /* bottom padding keeps the lip from being clipped */
+.packTab {
+  --pc: #ffc94a;
+  display: inline-block;
+  padding: 8px 15px 9px; border-radius: 14px;
+  background: var(--card); color: var(--cream); border: 0;
+  box-shadow: 0 4px 0 #1f1636;
+  font: 600 .88rem "Fredoka", "Nunito", sans-serif;
+  transition: transform .08s, box-shadow .08s, background .15s;
+}
+.packTab:active { transform: translateY(3px); box-shadow: 0 1px 0 #1f1636; }
+
+.packTab[data-id="culture"]      { --pc: #ff7ac8; --pd: #8a2a9a; }
+.packTab[data-id="history"]      { --pc: #ffb347; --pd: #b4601a; }
+.packTab[data-id="nature"]       { --pc: #6af09a; --pd: #1f7a45; }
+.packTab[data-id="tourism"]      { --pc: #6ecbff; --pd: #1d5aa0; }
+.packTab[data-id="sports"]       { --pc: #ff6a5a; --pd: #a81f1f; }
+.packTab[data-id="cars"]         { --pc: #3fe0cf; --pd: #0f6a70; }
+.packTab[data-id="space"]        { --pc: #a58aff; --pd: #3a1fa0; }
+.packTab[data-id="food"]         { --pc: #ffd83a; --pd: #c98a00; }
+.packTab[data-id="architecture"] { --pc: #d6def5; --pd: #566a96; }
+.packTab[data-id="all"]          { --pd: #c98a00; }
+
+/* selected tab fills with its category colour */
+.packTab.on { background: var(--pc); color: var(--ink); box-shadow: 0 4px 0 var(--pd, #c98a00); }
+.packTab.on:active { box-shadow: 0 1px 0 var(--pd, #c98a00); }
+
+/* ===== RACE: LAYOUT POLISH ===== */
+
+/* ---------- shared: inputs and dropdowns ---------- */
+section#raceMenu input, section#raceLobby select {
+  width: 100%; max-width: none; height: 54px; padding: 0 16px;
+  border-radius: 16px; border: 2px solid rgba(255,255,255,.14);
+  background: #120c20; color: var(--cream);
+  font: 600 1rem "Fredoka", "Nunito", sans-serif; text-align: center;
+  box-shadow: inset 0 3px 8px rgba(0,0,0,.5); outline: 0;
+  -webkit-user-select: text; user-select: text;      /* lets you type on iPhone */
+  transition: border-color .15s, box-shadow .15s;
+}
+section#raceMenu input:focus, section#raceLobby select:focus {
+  border-color: var(--gold); box-shadow: inset 0 3px 8px rgba(0,0,0,.5), 0 0 0 3px rgba(255,201,74,.25);
+}
+section#raceMenu input::placeholder { color: rgba(255,244,224,.4); }
+
+/* ---------- menu ---------- */
+section#raceMenu { justify-content: flex-start; gap: 14px; padding-top: calc(40px + env(safe-area-inset-top)); }
+section#raceMenu > * { width: min(100%, 360px); }
+section#raceMenu h2 { font-size: 2rem; line-height: 1.05; text-shadow: 0 3px 0 rgba(0,0,0,.35); }
+section#raceMenu .message { max-width: none; }
+section#raceMenu button { width: 100%; }
+section#raceMenu #raceCreate { min-height: 60px; font-size: 1.2rem; }
+section#raceMenu #raceMsg { color: #ffb08a; }
+
+/* "or join a friend" with lines either side */
+section#raceMenu p:nth-of-type(2) {
+  display: flex; align-items: center; gap: 12px; margin-top: 6px;
+  font-size: .75rem; letter-spacing: .15em; text-transform: uppercase; opacity: .7;
+}
+section#raceMenu p:nth-of-type(2)::before, section#raceMenu p:nth-of-type(2)::after {
+  content: ""; flex: 1; height: 1px; background: rgba(255,255,255,.22);
+}
+
+/* join row: code box + button side by side */
+section#raceMenu .row { flex-wrap: nowrap; gap: 10px; }
+section#raceMenu .row input { flex: 1; min-width: 0; }
+section#raceMenu .row button { width: auto; flex: none; height: 54px; padding: 0 24px; }
+section#raceMenu #raceCode { font-size: 1.3rem; letter-spacing: .35em; padding-left: calc(16px + .35em); }
+
+/* ---------- lobby ---------- */
+section#raceLobby { justify-content: flex-start; gap: 14px; padding-top: calc(32px + env(safe-area-inset-top)); }
+section#raceLobby > * { width: min(100%, 360px); }
+section#raceLobby button { width: 100%; }
+
+/* room code as a big dashed ticket */
+section#raceLobby h2 {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  font-size: .8rem; letter-spacing: .3em; text-transform: uppercase; color: var(--cream); opacity: .85;
+}
+section#raceLobby #roomCode {
+  display: block; width: 100%; padding: 10px 8px 10px calc(8px + .25em);
+  font: 700 2.6rem/1 "Fredoka", sans-serif; letter-spacing: .25em; color: var(--gold);
+  background: #120c20; border: 2px dashed var(--gold); border-radius: 18px;
+  text-shadow: 0 0 18px rgba(255,201,74,.45);
+}
+
+/* size + puzzle dropdowns side by side */
+section#raceLobby .row { flex-wrap: nowrap; gap: 10px; }
+section#raceLobby select {
+  flex: 1; min-width: 0; font-size: .85rem; padding: 0 30px 0 12px; text-align-last: center;
+  -webkit-appearance: none; appearance: none;
+}
+section#raceLobby select {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23ffc94a' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+  background-repeat: no-repeat; background-position: right 12px center;
+}
+section#raceLobby select:disabled { opacity: .6; }
+
+/* players as cards */
+section#raceLobby #playerList { gap: 10px; }
+section#raceLobby #playerList li {
+  display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-radius: 16px;
+  background: var(--card); box-shadow: 0 4px 0 #1f1636;
+  font: 600 1rem "Fredoka", "Nunito", sans-serif; text-align: left;
+  animation: raceIn .35s var(--ease) backwards;
+}
+@keyframes raceIn { from { opacity: 0; transform: translateY(10px) scale(.97); } }
+
+/* start + leave stacked full width */
+section#raceLobby .row:last-child { flex-direction: column; }
+section#raceLobby #raceStart { min-height: 60px; font-size: 1.2rem; }
+
+/* ---------- live race bars ---------- */
+#raceBars:empty { display: none; }
+#raceBars {
+  width: min(92vw, 420px); padding: 12px 14px; gap: 10px;
+  border-radius: 18px; background: var(--card); box-shadow: 0 4px 0 #1f1636;
+}
+#raceBars .rbar { grid-template-columns: 92px 1fr 54px; width: 100%; font: 600 .85rem "Fredoka", "Nunito", sans-serif; }
+#raceBars .rbar > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#raceBars .rbar > b { text-align: right; color: var(--gold); font-size: .8rem; }
+#raceBars .track { height: 12px; border-radius: 99px; background: #120c20; box-shadow: inset 0 2px 4px rgba(0,0,0,.6); }
+#raceBars .track i { border-radius: 99px; background: linear-gradient(90deg, #ffc94a, #ffe27a); box-shadow: 0 0 10px rgba(255,201,74,.6); }
+
+/* ---------- countdown ---------- */
+#boardWrap #raceCount {
+  border-radius: 24px;
+  background: radial-gradient(circle at 50% 40%, rgba(60,45,102,.97), rgba(18,12,32,.98));
+  font: 700 6rem "Fredoka", sans-serif;
+  text-shadow: 0 5px 0 var(--gold-d), 0 0 30px rgba(255,201,74,.6);
+  animation: raceTick 1s ease-out;
+}
+@keyframes raceTick { from { transform: scale(1.5); opacity: 0; } 30% { opacity: 1; } to { transform: scale(1); } }
+
+/* ---------- results ---------- */
+body #raceResult { background: rgba(10,6,20,.82); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+#raceResult h2 { font-size: 1.8rem; text-shadow: 0 2px 0 rgba(0,0,0,.4); }
+#rrList { display: flex; flex-direction: column; margin: 4px 0; }
+#raceResult .rrow {
+  padding: 11px 14px; margin-bottom: 6px; border: 0; border-radius: 12px;
+  background: rgba(255,255,255,.07); font-weight: 700; text-align: left;
+}
+#raceResult .rrow:first-child { background: rgba(255,201,74,.2); color: var(--gold); box-shadow: inset 0 0 0 1.5px rgba(255,201,74,.55); }
+#raceResult .rrow b { color: var(--gold); }
+#raceResult .row { flex-wrap: nowrap; }
+#raceResult .row button { flex: 1; }

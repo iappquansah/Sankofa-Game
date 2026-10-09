@@ -174,7 +174,9 @@ window.raceActive = false;
     const cd = $("raceCount"); cd.classList.remove("hidden");
     for (const s of ["3", "2", "1", "GO!"]) {
       if (my !== roundId || !window.raceActive) return;
-      cd.textContent = s; sfx.tap(); await sleep(s === "GO!" ? 500 : 1000);
+      // cd.textContent = s; sfx.tap(); await sleep(s === "GO!" ? 500 : 1000);
+      cd.textContent = s; cd.style.animation = "none"; void cd.offsetWidth; cd.style.animation = "";
+sfx.tap(); await sleep(s === "GO!" ? 500 : 1000);
     }
     if (my !== roundId || !window.raceActive) return;
     cd.classList.add("hidden"); solved = false; t0 = Date.now(); renderBoard();
