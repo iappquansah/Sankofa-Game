@@ -115,6 +115,7 @@ function showScreen(id) {
   document.body.dataset.screen = id;
   document.body.classList.toggle("nonav", !["home", "exploreScreen", "journalScreen", "raceMenu"].includes(id));
   window.scrollTo(0, 0);
+  if (id === "home") applyScroll();
 }
 let toastTimer;
 function toast(msg) {
@@ -123,42 +124,470 @@ function toast(msg) {
 }
 
 /* ---------- HOME ---------- */
-function skyColor() {
-  const h = new Date().getHours();
-  if (h < 6 || h >= 19) return "linear-gradient(#1d2a4a, #2b3a5c)";   // night / twilight blue
-  if (h < 11) return "linear-gradient(#f7e2a0, #f2d27a)";              // morning gold
-  if (h < 17) return "linear-gradient(#bfe3f0, #a8d5a2)";              // afternoon
-  return "linear-gradient(#f0b27a, #e8a86b)";                           // evening
+/* ---------- SANCTUARY ENGINE: layered, scrollable diorama ---------- */
+const SPR = "images/sanctuary/", WORLD = 2000, ZSTEP = 205, ZX0 = 110;
+const ZONE_FILE = { history: "zone-history", culture: "zone-culture", nature: "zone-nature", tourism: "zone-landmarks", sports: "zone-sports", cars: "zone-cars", space: "zone-space", food: "zone-food", architecture: "zone-architecture" };
+const PLANTS = [["baobab", "Baobab"], ["oil-palm", "Oil Palm"], ["mango-tree", "Mango Tree"], ["cocoa-plant", "Cocoa Tree"], ["bush", "Bush"], ["hibiscus", "Hibiscus"], ["flowers", "Wildflowers"], ["grass", "Tall Grass"]];
+const PLANT_W = { "baobab-1": 50, "baobab-2": 90, "baobab-3": 140, "oil-palm": 90, "mango-tree": 100, "cocoa-plant": 70, bush: 62, hibiscus: 50, flowers: 42, grass: 38 };
+const ANIMALS = [
+  { f: "butterfly", n: "Butterfly", fly: 1 }, { f: "hornbill", n: "Hornbill", fly: 1 }, { f: "tortoise", n: "Tortoise" },
+  { f: "grey-parrot", n: "Grey Parrot", fly: 1 }, { f: "antelope", n: "Antelope" }, { f: "monkey", n: "Mona Monkey" },
+  { f: "elephant", n: "Elephant" }, { f: "fruit-bat", n: "Fruit Bat", fly: 1 }, { f: "toucan", n: "Toucan", fly: 1 }, { f: "zebra", n: "Zebra" }
+];
+const THEMES = {
+  dawn: { sky: ["#f7c59f", "#ffe9bf"], far: "#c98b8b", mid: "#8d7a6b", gnd: ["#6aa04f", "#4a7c3a"], low: true },
+  day: { sky: ["#79c2e8", "#d6f1fc"], far: "#86b9b4", mid: "#5e9c6a", gnd: ["#5fae4f", "#3b7d3a"] },
+  evening: { sky: ["#e8765a", "#f6c27b"], far: "#9a5a7a", mid: "#6a4f6f", gnd: ["#4f8a45", "#2f5f35"], low: true },
+  night: { sky: ["#14102b", "#2b2158"], far: "#2d2b5a", mid: "#1f3a45", gnd: ["#2a5a3f", "#173a2c"], night: true }
+};
+const themeNow = () => { const h = new Date().getHours(); return h < 5 || h >= 20 ? "night" : h < 8 ? "dawn" : h < 16 ? "day" : "evening"; };
+const levelName = n => n < 5 ? "Seed" : n < 15 ? "Grove" : n < 30 ? "Haven" : "Sanctuary";
+const packTotal = id => PUZZLES.filter(p => p.cat === id).length;
+const packDone = id => save.journal.filter(i => PUZZLES[i] && PUZZLES[i].cat === id).length;
+let lastScroll = null, lastN = -1, pendingScroll = 0;
+
+function hillPath(base, amp, f1, f2, ph) {
+  let d = `M0,200 L0,${base}`;
+  for (let x = 0; x <= 2000; x += 25) d += ` L${x},${(base + amp * Math.sin(x * f1 + ph) + amp * 0.5 * Math.sin(x * f2 + ph * 2)).toFixed(1)}`;
+  return d + " L2000,200 Z";
 }
-function renderSanctuary(quiet) {
-  const scene = $("scene");
-  scene.innerHTML = '<div class="ground"></div>';
-  scene.style.background = skyColor();
-  const hr = new Date().getHours(), night = hr < 6 || hr >= 19;
-  scene.insertAdjacentHTML("beforeend", `<div class="orb${night ? " moon" : ""}"></div>`);
-  for (let k = 0; k < 4; k++) scene.insertAdjacentHTML("beforeend", night
-    ? `<span class="fly" style="left:${15 + k * 22}%;top:${18 + (k % 2) * 25}%;animation-delay:${k * 0.7}s">✨</span>`
-    : `<span class="cloud" style="top:${6 + k * 7}%;animation-delay:${-k * 9}s">☁️</span>`);
-  scene.classList.toggle("quiet", quiet);
-  if (save.sanctuary.length === 0) {
-    scene.insertAdjacentHTML("beforeend", '<div class="empty">Your sanctuary is waiting for its first seed.</div>');
+// A picture that falls back to a drawn shape (or nothing) if the file is missing
+function sprite(file, w, fb) {
+  const img = new Image();
+  img.src = SPR + file + ".webp"; img.draggable = false; img.style.width = w + "px";
+  img.onerror = () => { const r = fb ? fb() : null; r ? img.replaceWith(r) : img.remove(); };
+  return img;
+}
+function treeFB(w) {
+  const s = document.createElement("span");
+  s.innerHTML = `<svg width="${w}" viewBox="0 0 40 50"><rect x="18" y="28" width="4" height="22" fill="#6b4a2f"/><circle cx="20" cy="20" r="16" fill="#4fbf7a"/><circle cx="14" cy="24" r="9" fill="#3ea565"/></svg>`;
+  return s;
+}
+function sanctuaryGain(i, pidx) {
+  const item = i % 3 === 2 ? ANIMALS[Math.floor(i / 3) % ANIMALS.length].n : PLANTS[(i - Math.floor((i + 1) / 3)) % PLANTS.length][1];
+  const c = CATEGORIES.find(x => x.id === PUZZLES[pidx].cat);
+  return `${item} · ${c.name} zone ${packDone(c.id)} of ${packTotal(c.id)}`;
+}
+function zoneTap(c, done, tot) {
+  if (!done) return toast(`Solve a ${c.name} puzzle to start building here`);
+  const mine = save.journal.filter(i => PUZZLES[i] && PUZZLES[i].cat === c.id);
+  showCard(mine[mine.length - 1], false, null, "home", true);
+  $("cardReward").textContent = `${c.name} zone: ${done} of ${tot} restored`;
+}
+function parallax() {
+  const sc = $("scene").querySelector(".scroller"); if (!sc) return;
+  $("scene").querySelectorAll(".hl").forEach(h => h.style.transform = `translateX(${-sc.scrollLeft * +h.dataset.f}px)`);
+}
+// function applyScroll() {
+//   const sc = $("scene").querySelector(".scroller"); if (!sc) return;
+//   sc.scrollLeft = pendingScroll; parallax();
+// }
+
+// function renderSanctuary(quiet) {
+//   const scene = $("scene"), T = THEMES[themeNow()], n = save.sanctuary.length;
+//   if (n !== lastN) { lastScroll = null; lastN = n; }           // recentre when something new is built
+//   scene.classList.toggle("quiet", quiet);
+//   scene.classList.toggle("night", !!T.night);
+//   scene.style.background = `linear-gradient(${T.sky[0]}, ${T.sky[1]})`;
+
+//   let sky = `<div class="orb${T.night ? " moon" : ""}${T.low ? " low" : ""}"></div>`;
+//   if (T.night) for (let k = 0; k < 26; k++) sky += `<b class="star" style="left:${(k * 37) % 100}%;top:${(k * 53) % 55}%;animation-delay:${(k % 5) * 0.6}s"></b>`;
+//   else for (let k = 0; k < 3; k++) sky += `<i class="cld" style="top:${8 + k * 11}%;animation-delay:${-k * 14}s"></i>`;
+//   scene.innerHTML = `<div class="sky">${sky}</div>
+//     <svg class="hl" data-f=".25" viewBox="0 0 2000 200" preserveAspectRatio="none"><path d="${hillPath(120, 22, 0.006, 0.017, 1)}" fill="${T.far}"/></svg>
+//     <svg class="hl hl2" data-f=".55" viewBox="0 0 2000 200" preserveAspectRatio="none"><path d="${hillPath(135, 26, 0.009, 0.021, 3)}" fill="${T.mid}"/></svg>
+//     <div class="scroller"><div class="world" style="width:${WORLD}px"><div class="gnd" style="background:linear-gradient(${T.gnd[0]},${T.gnd[1]})"></div></div></div>
+//     <div class="lvl">${levelName(n)}</div>`;
+//   const world = scene.querySelector(".world"), sc = scene.querySelector(".scroller");
+
+//   // streak lanterns on a rope (green ones are Rest Leaves)
+//   const L = Math.min(save.streak, 14), lv = Math.min(save.restLeaves, 2);
+//   if (L + lv) {
+//     let rope = "", lan = "";
+//     for (let k = 0; k < L + lv; k++) {
+//       const x = 40 + k * 140;
+//       rope += `M${x},2 Q${x + 70},28 ${x + 140},2 `;
+//       lan += `<i class="lan${k >= L ? " leaf" : ""}" style="left:${x + 140}px"></i>`;
+//     }
+//     world.insertAdjacentHTML("beforeend", `<svg class="rope" width="${WORLD}" height="34"><path d="${rope}" fill="none" stroke="rgba(255,244,224,.45)" stroke-width="1.5"/></svg>${lan}`);
+//   }
+//   if (T.night) for (let k = 0; k < 7; k++) world.insertAdjacentHTML("beforeend", `<i class="fly" style="left:${(k * 331) % 1900}px;top:${40 + (k * 17) % 35}%;animation-delay:${k * 0.5}s"></i>`);
+
+//   // zones: one landmark per pack that builds up as you solve its puzzles
+//   CATEGORIES.forEach((c, k) => {
+//     const tot = packTotal(c.id); if (!tot) return;
+//     const done = packDone(c.id), s = done >= tot ? 4 : done >= tot * 0.6 ? 3 : done >= tot * 0.35 ? 2 : done ? 1 : 0;
+//     const z = document.createElement("div");
+//     z.className = "zone s" + s; z.style.left = (ZX0 + k * ZSTEP) + "px";
+//     if (s) z.appendChild(sprite(ZONE_FILE[c.id], 150, () => { const f = document.createElement("div"); f.className = "zoneFB"; f.textContent = c.name; return f; }));
+//     else z.innerHTML = '<div class="plot"></div>';
+//     z.insertAdjacentHTML("beforeend", `<span class="zname">${c.name}</span>`);
+//     z.onclick = () => zoneTap(c, done, tot);
+//     world.appendChild(z);
+//   });
+
+//   // plants and animals: every third puzzle brings an animal, the rest plant something
+//   for (let i = Math.max(0, n - 40); i < n; i++) {
+//     const age = n - 1 - i, b = 4 + (i * 37) % 15, box = document.createElement("div");
+//     if (i % 3 === 2) {
+//       const a = ANIMALS[Math.floor(i / 3) % ANIMALS.length];
+//       box.className = "prop " + (a.fly ? "flyer" : "walker");
+//       box.style.animationDuration = (a.fly ? 5 + i % 4 : 38 + i % 17) + "s";
+//       if (a.fly) box.style.top = (14 + (i * 23) % 30) + "%"; else box.style.bottom = b + "%";
+//       box.appendChild(sprite(a.f, a.fly ? 54 : 78, null));
+//       box.onclick = ev => {
+//         ev.stopPropagation(); toast(a.n); tone(520 + (i % 5) * 60, 0.12, 0.08);
+//         box.classList.remove("hop"); void box.offsetWidth; box.classList.add("hop");
+//       };
+//     } else {
+//       const p = PLANTS[(i - Math.floor((i + 1) / 3)) % PLANTS.length];
+//       const file = p[0] === "baobab" ? (age < 3 ? "baobab-1" : age < 8 ? "baobab-2" : "baobab-3") : p[0];
+//       box.className = "prop plant"; box.style.bottom = b + "%";
+//       box.appendChild(sprite(file, PLANT_W[file], () => treeFB(PLANT_W[file])));
+//       box.onclick = ev => { ev.stopPropagation(); toast(p[1]); };
+//     }
+//     box.style.left = (50 + (i * 211) % (WORLD - 140)) + "px"; box.style.zIndex = 30 - Math.round(b);
+//     if (i === n - 1) box.classList.add("newest");
+//     world.appendChild(box);
+//   }
+
+//   sc.onscroll = () => { lastScroll = sc.scrollLeft; parallax(); };
+//   const last = save.journal.length ? PUZZLES[save.journal[save.journal.length - 1]] : null;
+//   const ki = Math.max(0, CATEGORIES.findIndex(c => last && c.id === last.cat));
+//   pendingScroll = lastScroll != null ? lastScroll : Math.max(0, ZX0 + ki * ZSTEP - (sc.clientWidth || 360) / 2);
+//   applyScroll();
+// }
+
+/* ---------- SANCTUARY AS A VERTICAL CLIMB ---------- */
+let climbTop = null, climbN = -1, climbFocus = null, climbIO = null;
+let calib = false, calibPts = {};
+const tierStage = (done, tot) => done >= tot ? 4 : done >= tot * 0.6 ? 3 : done >= tot * 0.35 ? 2 : done ? 1 : 0;
+let lastSig = "";
+
+// Optional zone artwork: removed automatically if the file doesn't exist
+// function mapLayer(file, cls, onLoad) {
+//   const img = new Image();
+//   img.className = cls; img.alt = ""; img.draggable = false;
+//   img.onload = () => onLoad && onLoad();
+//   img.onerror = () => img.remove();
+//   img.src = SPR + file + ".webp";
+//   return img;
+// }
+// Zone artwork: created once, decoded once, then reused on every re-render
+const layerCache = {};
+function mapLayer(file, cls) {
+  const key = file + "|" + cls;
+  if (key in layerCache) return layerCache[key] || document.createComment("");
+  const img = new Image();
+  img.className = cls; img.alt = ""; img.draggable = false;
+  img.decoding = "sync";
+  img.onerror = () => { img.remove(); layerCache[key] = null; };
+  img.src = SPR + file + ".webp";
+  layerCache[key] = img;
+  return img;
+}
+
+// Smooth S-curve through the node points
+function smoothPath(pts) {
+  let d = `M${pts[0].x},${pts[0].y}`;
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1], b = pts[i], my = (a.y + b.y) / 2;
+    d += ` C${a.x},${my} ${b.x},${my} ${b.x},${b.y}`;
   }
-  save.sanctuary.forEach((r, i) => {
-    const slot = SLOTS[i % SLOTS.length];
-    const reward = REWARDS[r % REWARDS.length];
-    const lap = Math.floor(i / SLOTS.length) * 3;           // nudge repeats so they don't overlap
-    const el = document.createElement("div");
-    el.className = "item";
-    el.textContent = reward.emoji;
-    const age = save.sanctuary.length - 1 - i;            // newer friends start small and grow each day
-    el.style.fontSize = (20 + Math.min(age, 8) * 2.5) + "px";
-    if (age === 0) el.classList.add("newest");
-    el.style.left = Math.min(95, slot.x + lap) + "%";
-    el.style.top = slot.y + "%";
-    el.onclick = () => toast(reward.twi ? `${reward.name} · ${reward.twi}` : reward.name);
-    scene.appendChild(el);
-  });
+  return d;
 }
+
+// Node positions: custom per zone if provided, otherwise a zigzag
+// function zonePositions(id, tot) {
+//   const custom = ZONE_PATHS[id];
+//   if (custom && custom.length >= tot) return custom.slice(0, tot);
+//   return Array.from({ length: tot }, (_, j) => ({
+//     x: j % 2 ? 70 : 30,
+//     y: tot === 1 ? 50 : 76 - j * (50 / (tot - 1))
+//   }));
+// }
+
+// Node positions: custom per zone if provided, otherwise a winding road.
+// Returns percentages inside the zone, plus the zone height in px.
+const NODE_STEP = 84;
+function zonePositions(id, tot, k) {
+  const H = Math.max(300, (tot - 1) * NODE_STEP + 112);
+  const custom = ZONE_PATHS[id];
+  if (custom && custom.length >= tot) return { H, pos: custom.slice(0, tot) };
+  const pos = Array.from({ length: tot }, (_, j) => ({
+    x: +Math.min(80, Math.max(20, 50 + 24 * Math.sin(j * 1.05 + k * 1.9) + 10 * Math.sin(j * 2.7 + k * 0.8))).toFixed(1),
+    y: +((H / 2 + ((tot - 1) / 2 - j) * NODE_STEP) / H * 100).toFixed(1)
+  }));
+  return { H, pos };
+}
+
+function applyScroll() {
+  const wrap = $("scene").querySelector(".climb"); if (!wrap) return;
+  if (climbTop != null) wrap.scrollTop = climbTop;
+  else {
+    const t = wrap.querySelector(`[data-cat="${climbFocus}"]`);
+    if (t) wrap.scrollTop = t.offsetTop;
+  }
+}
+
+const ZONE_BG = { culture:"#8a3a6e", history:"#b4502a", nature:"#2f8a52", tourism:"#3a86c0", sports:"#c9662a", cars:"#5a4a66", space:"#1c1640", food:"#d0782a", architecture:"#4a3670" };
+
+// ---------- Generated scenery (replaced automatically by map-<zone>.webp art if present) ----------
+const ZONE_KIND = { culture:"acacia", history:"acacia", nature:"trees", tourism:"trees", sports:"city", cars:"city", space:"stars", food:"trees", architecture:"city" };
+const KIND_GROUND = { trees:"#2f6b3a", acacia:"#8a7a3a", city:"#1f2540", stars:"#1c1640" };
+
+function scenery(id, H, k) {
+  const W = 400, rnd = mulberry32(hashStr("scn-" + id)), base = ZONE_BG[id], kind = ZONE_KIND[id] || "trees";
+  const cm = (a, p, b) => `color-mix(in srgb, ${a} ${p}%, ${b})`;
+  const hill = (y0, amp, f) => {
+    const ph = rnd() * 6, y = x => y0 + amp * Math.sin(x * f + ph) + amp * .45 * Math.sin(x * f * 2.3 + ph * 1.7);
+    let d = `M0,${H} L0,${y(0).toFixed(1)}`;
+    for (let x = 10; x <= W; x += 10) d += ` L${x},${y(x).toFixed(1)}`;
+    return { d: d + ` L${W},${H} Z`, y };
+  };
+  let s = `<defs>
+    <radialGradient id="sg${id}" cx="${(.25 + rnd() * .5).toFixed(2)}" cy=".26" r=".6"><stop offset="0" stop-color="#fff3c4" stop-opacity=".6"/><stop offset="1" stop-color="#fff3c4" stop-opacity="0"/></radialGradient>
+    <linearGradient id="hz${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffecd2" stop-opacity="0"/><stop offset=".6" stop-color="#ffecd2" stop-opacity=".22"/><stop offset="1" stop-color="#ffecd2" stop-opacity="0"/></linearGradient>
+    <radialGradient id="pl${id}" cx=".35" cy=".3"><stop offset="0" stop-color="#e3d9ff"/><stop offset="1" stop-color="#3a2a7a"/></radialGradient>
+  </defs>`;
+
+  if (kind === "stars") {
+    s += `<rect width="${W}" height="${H}" fill="url(#sg${id})" opacity=".5"/>`;
+    for (let i = 0; i < 80; i++) s += `<circle cx="${(rnd() * W).toFixed(0)}" cy="${(rnd() * H).toFixed(0)}" r="${(rnd() * 1.3 + .3).toFixed(1)}" fill="#fff" opacity="${(.3 + rnd() * .7).toFixed(2)}"/>`;
+    const px = 90 + rnd() * 220, py = H * .32;
+    s += `<circle cx="${px.toFixed(0)}" cy="${py.toFixed(0)}" r="34" fill="url(#pl${id})"/>
+      <ellipse cx="${px.toFixed(0)}" cy="${py.toFixed(0)}" rx="62" ry="12" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="3" transform="rotate(-18 ${px.toFixed(0)} ${py.toFixed(0)})"/>
+      <circle cx="${(W - px).toFixed(0)}" cy="${(H * .7).toFixed(0)}" r="14" fill="url(#pl${id})" opacity=".8"/>`;
+    return `<svg class="scenery" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${s}</svg>`;
+  }
+
+  const g = KIND_GROUND[kind];
+  const far = hill(H * .40, 12, .02), mid = hill(H * .56, 16, .025), near = hill(H * .76, 12, .035);
+  s += `<rect width="${W}" height="${H}" fill="url(#sg${id})"/>`;
+  s += `<path d="${far.d}" style="fill:${cm(base, 60, "#ffe6c4")}"/>`;
+
+  if (kind === "city") {                               // skyline standing on the far ridge
+    for (let x = -6; x < W; x += 20 + rnd() * 18) {
+      const w = 14 + rnd() * 14, h = 30 + rnd() * 80, y = far.y(x) - h + 10;
+      s += `<rect x="${x.toFixed(0)}" y="${y.toFixed(0)}" width="${w.toFixed(0)}" height="${h.toFixed(0)}" style="fill:${cm(base, 30, "#0e0a1c")}"/>`;
+      for (let n = 0; n < 5; n++) s += `<rect x="${(x + 3 + rnd() * (w - 8)).toFixed(0)}" y="${(y + 6 + rnd() * (h - 12)).toFixed(0)}" width="2" height="3" fill="#ffd36a" opacity="${(.4 + rnd() * .5).toFixed(2)}"/>`;
+    }
+  }
+  s += `<rect y="${(H * .34).toFixed(0)}" width="${W}" height="${(H * .22).toFixed(0)}" fill="url(#hz${id})"/>`;   // atmospheric haze
+  s += `<path d="${mid.d}" style="fill:${cm(cm(g, 55, base), 82, "#10091e")}"/>`;
+
+  for (let i = 0; i < 10; i++) {                       // trees on the middle ridge
+    const x = rnd() * W, y = mid.y(x) + 2, z = 9 + rnd() * 11, tc = cm(g, 60, "#0b1a10");
+    if (kind === "acacia") s += `<path d="M${x.toFixed(0)},${y.toFixed(0)} l1,${-z} l-3,-4 M${x.toFixed(0)},${(y - z).toFixed(0)} l4,-4" stroke="#2a1a10" stroke-width="1.6" fill="none"/><ellipse cx="${x.toFixed(0)}" cy="${(y - z - 4).toFixed(0)}" rx="${(z * 1.1).toFixed(0)}" ry="${(z * .35).toFixed(0)}" style="fill:${tc}"/>`;
+    else if (kind === "trees") s += `<rect x="${(x - 1).toFixed(0)}" y="${(y - z * .6).toFixed(0)}" width="2" height="${(z * .7).toFixed(0)}" fill="#2a1a10"/><circle cx="${x.toFixed(0)}" cy="${(y - z).toFixed(0)}" r="${(z * .6).toFixed(0)}" style="fill:${tc}"/><circle cx="${(x - z * .35).toFixed(0)}" cy="${(y - z * .7).toFixed(0)}" r="${(z * .45).toFixed(0)}" style="fill:${tc}"/><circle cx="${(x + z * .4).toFixed(0)}" cy="${(y - z * .75).toFixed(0)}" r="${(z * .45).toFixed(0)}" style="fill:${tc}"/>`;
+  }
+  s += `<path d="${near.d}" style="fill:${cm(g, 82, "#10091e")}"/>`;
+  for (let i = 0; i < 26; i++) {                        // grass tufts
+    const x = rnd() * W, y = near.y(x) + 4 + rnd() * (H * .2);
+    s += `<path d="M${x.toFixed(0)},${y.toFixed(0)} l-2,-7 M${x.toFixed(0)},${y.toFixed(0)} l0,-9 M${x.toFixed(0)},${y.toFixed(0)} l2,-7" stroke="${cm(g, 55, "#a8d878")}" stroke-width="1.2" fill="none" opacity=".6"/>`;
+  }
+  return `<svg class="scenery" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${s}</svg>`;
+}
+// Bottom sheet for stops you haven't restored yet
+function openSheet(o, c, state) {
+  const img = $("sheetImg"), btn = $("sheetBtn");
+  $("sheet").dataset.state = state;
+  $("sheet").className = "category-" + c.id;
+  img.style.backgroundImage = `url(${o.p.image})`;
+  $("sheetKicker").textContent = c.name;
+
+  if (state === "current") {
+    $("sheetTitle").textContent = o.p.name;
+    $("sheetText").textContent = "Rebuild the picture to unlock its story.";
+    if (doneToday()) {
+      btn.textContent = "Come back tomorrow"; btn.disabled = true; btn.onclick = null;
+    } else {
+      btn.textContent = "Play"; btn.disabled = false;
+      btn.onclick = () => { closeSheet(); startAmbient(); startPuzzle(); };
+    }
+  } else {
+    $("sheetTitle").textContent = "???";
+    $("sheetText").textContent = "Keep your daily streak going to reach this stop.";
+    btn.textContent = "Got it"; btn.disabled = false; btn.onclick = closeSheet;
+  }
+  $("sheet").classList.remove("hidden");
+}
+function closeSheet() { $("sheet").classList.add("hidden"); }
+$("sheet").onclick = e => { if (e.target === $("sheet")) closeSheet(); };
+
+function renderSanctuary(quiet) {
+    const sig = [save.puzzleIndex, save.journal.length, save.sanctuary.length, doneToday(), quiet].join("|");
+  if (sig === lastSig && $("scene").querySelector(".climb")) return;   // nothing changed, leave the map alone
+  lastSig = sig;
+  const scene = $("scene"), n = save.sanctuary.length;
+  const cur = save.puzzleIndex % PUZZLES.length, today = doneToday();
+  if (n !== climbN) { climbTop = null; climbN = n; }          // recentre when something new is built
+
+  scene.removeAttribute("style");
+  scene.className = "climbScene" + (quiet ? " quiet" : "");
+  // scene.innerHTML = '<div class="climb"></div><nav class="rail" aria-label="Sanctuary zones"></nav>';
+  // const wrap = scene.querySelector(".climb"), rail = scene.querySelector(".rail");
+  //   scene.innerHTML = '<div class="climb"></div><div class="zoneHud"><span class="zIcon"></span><b></b><em></em><i class="zBar"><u></u></i></div>';
+  // const wrap = scene.querySelector(".climb"), hud = scene.querySelector(".zoneHud");
+
+    scene.innerHTML = '<div class="climb"></div>';
+  const wrap = scene.querySelector(".climb");
+  const zoneList = [...CATEGORIES].reverse().filter(x => packTotal(x.id));
+  const lastP = save.journal.length ? PUZZLES[save.journal[save.journal.length - 1]] : null;
+  climbFocus = today && lastP ? lastP.cat : PUZZLES[cur].cat;
+
+  // reversed: first zone at the bottom, you climb upward
+  [...CATEGORIES].reverse().forEach(c => {
+    const list = PUZZLES.map((p, i) => ({ p, i })).filter(o => o.p.cat === c.id);
+    if (!list.length) return;
+    const k = CATEGORIES.indexOf(c), tot = list.length, done = packDone(c.id);
+    const hasCur = list.some(o => o.i === cur), stage = tierStage(done, tot), open = done || hasCur;
+
+    const tier = document.createElement("section");
+    tier.className = `tier category-${c.id} s${stage}` + (open ? "" : " locked") + (done >= tot ? " complete" : "");
+    tier.dataset.cat = c.id;
+
+        const ri = zoneList.indexOf(c), me = ZONE_BG[c.id];
+    const up = ZONE_BG[(zoneList[ri - 1] || c).id], dn = ZONE_BG[(zoneList[ri + 1] || c).id];
+    tier.style.background = `linear-gradient(180deg, color-mix(in srgb, ${up}, ${me}) 0%, ${me} 28%, ${me} 72%, color-mix(in srgb, ${me}, ${dn}) 100%)`;
+    // Object.assign(tier.dataset, { name: c.name, done, tot, file: ZONE_FILE[c.id] });
+
+    // calibration: tap along your artwork to record node positions
+    tier.addEventListener("click", e => {
+      if (!calib) return;
+      const r = tier.getBoundingClientRect();
+      const pt = { x: +((e.clientX - r.left) / r.width * 100).toFixed(1), y: +((e.clientY - r.top) / r.height * 100).toFixed(1) };
+      (calibPts[c.id] = calibPts[c.id] || []).push(pt);
+      const line = `${c.id}: ${JSON.stringify(calibPts[c.id]).replace(/"/g, "")},`;
+      console.log(line);
+      try { navigator.clipboard.writeText(line); } catch (err) {}
+      toast(`${c.name}: point ${calibPts[c.id].length}`);
+    });
+
+    // optional illustrated terrain (map-<zone>.webp)
+    // tier.appendChild(mapLayer("map-" + c.id, "terrain"));
+        // tier.appendChild(mapLayer("map-" + c.id, "terrain", () => tier.classList.add("hasPath")));
+        //     // optional illustrated terrain (map-<zone>.webp)
+    tier.appendChild(mapLayer("map-" + c.id, "terrain"));
+
+    // // header
+    // const head = document.createElement("header"); head.className = "tierHead";
+    // head.appendChild(sprite(ZONE_FILE[c.id], 34, null));
+    // head.insertAdjacentHTML("beforeend",
+    //   `<h3>${c.name}</h3><span class="cnt">${done}/${tot}</span>` + (done >= tot ? '<span class="crest">Restored</span>' : ""));
+    // tier.appendChild(head);
+    // tier.insertAdjacentHTML("beforeend", `<div class="tierBar"><i style="width:${Math.round(done / tot * 100)}%"></i></div>`);
+
+    // // landmark: stands behind the path and grows with every puzzle restored
+    // const lm = document.createElement("div"); lm.className = "landmark";
+    // if (stage) lm.appendChild(sprite(ZONE_FILE[c.id], 230, () => { const f = document.createElement("div"); f.className = "zoneFB"; f.textContent = c.name; return f; }));
+    // else lm.innerHTML = '<div class="plot">Ready to build</div>';
+    // lm.onclick = () => zoneTap(c, done, tot);
+    // tier.appendChild(lm);
+
+    // path: dotted fallback line, replaced by illustrated path art (path-<zone>.webp) if it exists
+    // const pos = zonePositions(c.id, tot);
+    // tier.insertAdjacentHTML("beforeend",
+    //   `<svg class="trail" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="${smoothPath(pos)}"/></svg>`);
+        const { H, pos } = zonePositions(c.id, tot, k);
+    tier.style.height = H + "px"; tier.style.minHeight = "0";
+        // tier.insertAdjacentHTML("afterbegin", scenery(c.id, H, k));
+    // the road enters and leaves every zone at the centre, so zones join into one road
+    const d = smoothPath([{ x: 50, y: 101 }, ...pos, { x: 50, y: -1 }]);
+    // tier.insertAdjacentHTML("beforeend",
+    //   `<svg class="trail" viewBox="0 0 100 100" preserveAspectRatio="none"><path class="roadBed" d="${d}"/><path d="${d}"/></svg>`);
+        tier.insertAdjacentHTML("beforeend",
+      `<svg class="trail" viewBox="0 0 100 100" preserveAspectRatio="none"><path class="rShade" d="${d}"/><path class="rEdge" d="${d}"/><path class="rSurf" d="${d}"/><path class="rLine" d="${d}"/></svg>`);
+    tier.appendChild(mapLayer("path-" + c.id, "pathArt", () => tier.classList.add("hasPath")));
+
+    // sanctuary life: each restored puzzle in this zone adds a plant, every third an animal
+    const doneList = list.filter(o => save.journal.includes(o.i));
+    doneList.forEach((o, j) => {
+      const el = document.createElement("div");
+      if (j % 3 === 2) {
+        const a = ANIMALS[(k + j) % ANIMALS.length];
+        el.className = "prop2 " + (a.fly ? "flyer2" : "walker2");
+        // if (a.fly) el.style.top = (18 + (j * 13) % 14) + "%"; else el.style.bottom = (1 + (j * 5 + k) % 6) + "%";
+        if (a.fly) el.style.top = (8 + (j * 29 + k * 7) % 80) + "%"; else el.style.bottom = (4 + (j * 37 + k * 11) % 88) + "%";
+        el.appendChild(sprite(a.f, a.fly ? 40 : 58, null));
+        el.onclick = ev => { ev.stopPropagation(); toast(a.n); tone(520 + (j % 5) * 60, 0.12, 0.08); };
+      } else {
+        const p = PLANTS[(k + j) % PLANTS.length];
+        const file = p[0] === "baobab" ? "baobab-2" : p[0], w = Math.round(PLANT_W[file] * 0.75);
+        // el.className = "prop2 plant2"; el.style.bottom = (1 + (j * 5 + k) % 6) + "%";
+        el.className = "prop2 plant2"; el.style.bottom = (4 + (j * 37 + k * 11) % 88) + "%";
+        el.appendChild(sprite(file, w, () => treeFB(w)));
+        el.onclick = ev => { ev.stopPropagation(); toast(p[1]); };
+      }
+      el.style.left = (6 + (j * 31 + k * 17) % 84) + "%";
+      if (lastP && lastP.cat === c.id && j === doneList.length - 1) el.classList.add("newest");
+      tier.appendChild(el);
+    });
+
+    // puzzle nodes
+    list.forEach((o, j) => {
+      const state = save.journal.includes(o.i) ? "done" : (o.i === cur ? "current" : "locked");
+      const node = document.createElement("button");
+      node.className = "node " + state;
+      node.style.left = pos[j].x + "%"; node.style.top = pos[j].y + "%";
+      node.setAttribute("aria-label", state === "locked" ? `${c.name} puzzle, locked` : o.p.name);
+      const pin = document.createElement("div"); pin.className = "pin";
+      pin.appendChild(sprite("zone-map", 20, () => { const s = document.createElement("span"); s.textContent = "📍"; return s; }));
+      const card = document.createElement("div"); card.className = "nCard";
+      if (state !== "locked") card.style.backgroundImage = `url(${o.p.image})`;
+      const nm = document.createElement("span"); nm.className = "nName";
+      nm.textContent = state === "locked" ? "???" : o.p.name;
+      node.append(pin, card, nm);
+      // node.onclick = () => {
+      //   if (state === "done") showCard(o.i, false, null, "home", save.deep.includes(o.i));
+      //   else if (state === "current") {
+      //     if (doneToday()) toast("Today's puzzle is done. Come back tomorrow");
+      //     else { startAmbient(); startPuzzle(); }
+      //   } else toast("Keep your daily streak going to reach this puzzle");
+      // };
+            node.onclick = () => {
+        if (state === "done") showCard(o.i, false, null, "home", save.deep.includes(o.i));
+        else openSheet(o, c, state);
+      };
+      tier.appendChild(node);
+    });
+
+    wrap.appendChild(tier);
+    // rail.insertAdjacentHTML("beforeend", `<i data-cat="${c.id}" class="${done >= tot ? "full" : done ? "part" : ""}" title="${c.name}"></i>`);
+  });
+
+  // // side rail: tap a dot to jump, active dot follows the tier in view
+  // rail.querySelectorAll("i").forEach(d => d.onclick = () => {
+  //   const t = wrap.querySelector(`[data-cat="${d.dataset.cat}"]`);
+  //   if (t) wrap.scrollTo({ top: t.offsetTop, behavior: "smooth" });
+  // });
+  // if (climbIO) climbIO.disconnect();
+  // climbIO = new IntersectionObserver(es => es.forEach(e => {
+  //   if (e.isIntersecting) rail.querySelectorAll("i").forEach(d => d.classList.toggle("on", d.dataset.cat === e.target.dataset.cat));
+  // }), { root: wrap, threshold: 0.6 });
+  // wrap.querySelectorAll(".tier").forEach(t => climbIO.observe(t));
+
+  // wrap.onscroll = () => { climbTop = wrap.scrollTop; };
+  // applyScroll();
+  //   const updateHud = () => {
+  //   const mid = wrap.scrollTop + wrap.clientHeight / 2;
+  //   const t = [...wrap.children].find(x => x.offsetTop + x.offsetHeight > mid) || wrap.lastElementChild;
+  //   if (!t || hud.dataset.cat === t.dataset.cat) return;
+  //   hud.dataset.cat = t.dataset.cat;
+  //   hud.querySelector("b").textContent = t.dataset.name;
+  //   hud.querySelector("em").textContent = `${t.dataset.done}/${t.dataset.tot}`;
+  //   hud.querySelector("u").style.width = Math.round(t.dataset.done / t.dataset.tot * 100) + "%";
+  //   const ic = hud.querySelector(".zIcon"); ic.innerHTML = ""; ic.appendChild(sprite(t.dataset.file, 24, null));
+  //   hud.classList.toggle("done", +t.dataset.done >= +t.dataset.tot);
+  // };
+//   wrap.onscroll = () => { climbTop = wrap.scrollTop; updateHud(); };
+//   applyScroll(); updateHud();
+// }
+    wrap.onscroll = () => { climbTop = wrap.scrollTop; };
+  applyScroll();
+}
+
+
 function renderWeek() {
   const t = todayStr(), row = $("weekRow");
   row.innerHTML = "";
@@ -187,8 +616,9 @@ function refreshHome() {
   const c = save.puzzleIndex, pack = CATEGORIES.find(x => x.id === PUZZLES[c % PUZZLES.length].cat);
   $("beginBtn").textContent = done ? "Play again" : "Play today's puzzle";
   $("beginBtn").classList.toggle("secondary", done);
-  $("playSub").textContent = done ? "Just for calm. Your streak is safe"
-    : `${pack ? pack.name : ""} · ${levelFor(c)[1]}×${levelFor(c)[1]} · ${twistFor(c).n}`;
+  // $("playSub").textContent = done ? "Just for calm. Your streak is safe"
+  //   : `${pack ? pack.name : ""} · ${levelFor(c)[1]}×${levelFor(c)[1]} · ${twistFor(c).n}`;
+    $("playSub").textContent = "";
 
   renderWeek();
   renderSanctuary(broken && !!save.lastPlayed && !done);
@@ -356,9 +786,8 @@ function onWin() {
     updateStreak();
     if (!save.journal.includes(puzzleIdx)) save.journal.push(puzzleIdx);
     if (cycle >= 1 && !save.deep.includes(puzzleIdx)) save.deep.push(puzzleIdx);
-    const r = puzzleIdx % REWARDS.length;
-    save.sanctuary.push(r);
-    reward = REWARDS[r];
+       save.sanctuary.push(puzzleIdx % REWARDS.length);
+    reward = { name: sanctuaryGain(save.sanctuary.length - 1, puzzleIdx) };
     save.puzzleIndex++;
     writeSave();
   }
@@ -391,7 +820,7 @@ function showCard(idx, deep, reward, returnTo, both) {
   $("cardTitle").textContent = p.name;
   $("cardFact").textContent = cardText;
   $("cardSource").textContent = p.visit ? "📍 " + p.visit : "";
-  $("cardReward").textContent = reward ? `A new friend joined your sanctuary: ${reward.emoji} ${reward.name}` : "";
+ $("cardReward").textContent = reward ? "Your sanctuary grew: " + reward.name : "";
   $("card").classList.remove("hidden");
 }
 $("cardContinue").onclick = () => {
@@ -527,10 +956,17 @@ $("dbgAuto").onclick = async () => {
 };
 $("dbgLeaf").onclick = () => { save.restLeaves++; writeSave(); refreshHome(); };
 $("dbgReset").onclick = () => { localStorage.clear(); save = loadSave(); debugDate = null; refreshHome(); };
+$("dbgCalib").onclick = () => {
+  calib = !calib; calibPts = {};
+  document.body.classList.toggle("calib", calib);
+  $("dbgCalib").textContent = "Path points: " + (calib ? "on" : "off");
+  if (calib) toast("Tap each stop, bottom to top");
+};
 
 /* ---------- START ---------- */
 document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshHome(); });
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+CATEGORIES.forEach(c => mapLayer("map-" + c.id, "terrain"));
 refreshHome();
 showScreen("home");
 if (!save.seenTutorial) $("tutorial").classList.remove("hidden");

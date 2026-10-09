@@ -350,3 +350,9 @@ const PROVERBS = [
 // Akan day names (Sunday = 0). Spellings vary by region, e.g. Dwoada/Edwoada, Benada/Ebenada, Efiada/Fiada.
 const DAY_NAMES = ["Kwasiada", "Dwoada", "Benada", "Wukuada", "Yawoada", "Efiada", "Memeneda"];
 const DAY_ENGLISH = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+// Custom node positions per zone (x%, y% inside the zone), listed bottom to top.
+// Needs at least as many points as the zone has puzzles; otherwise the default zigzag is used.
+const ZONE_PATHS = {
+  // history: [{x:24,y:80},{x:62,y:72},{x:40,y:62},{x:72,y:52},{x:30,y:42},{x:66,y:34},{x:38,y:27},{x:60,y:20}],
+};

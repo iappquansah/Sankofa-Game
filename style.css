@@ -197,4 +197,352 @@ body[data-screen="journalScreen"] .tab[data-s="journalScreen"] svg, body[data-sc
 .dailyCard:active { transform:translateY(3px); box-shadow:0 1px 0 #1f1636; }
 .dailyCard small { display:block; opacity:.85; font-size:.68rem; text-transform:uppercase; letter-spacing:.12em; margin-bottom:3px; }
 .dailyCard b { font:600 .95rem/1.2 "Fredoka","Nunito",ui-rounded,system-ui,sans-serif; }
-.dailyGo { background:var(--cream); color:var(--ink); padding:8px 14px; border-radius:14px; white-space:nowrap; font:600 .85rem "Fredoka","Nunito",ui-rounded,system-ui,sans-serif; }      
+.dailyGo { background:var(--cream); color:var(--ink); padding:8px 14px; border-radius:14px; white-space:nowrap; font:600 .85rem "Fredoka","Nunito",ui-rounded,system-ui,sans-serif; }   
+
+/* ===== Sanctuary engine (v9) ===== */
+#scene::before { display:none; }
+#scene .sky { position:absolute; inset:0; pointer-events:none; }
+.hl { position:absolute; left:0; width:2000px; height:40%; bottom:26%; pointer-events:none; will-change:transform; }
+.hl2 { height:38%; bottom:18%; }
+.scroller { position:absolute; inset:0; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+.scroller::-webkit-scrollbar { display:none; }
+.world { position:relative; height:100%; }
+.gnd { position:absolute; left:0; right:0; bottom:0; height:34%; }
+.orb.low { top:38%; }
+.star { position:absolute; width:2px; height:2px; border-radius:50%; background:#fff; animation:twinkle 3s ease-in-out infinite alternate; }
+.cld { position:absolute; left:-30%; width:70px; height:20px; border-radius:20px; background:rgba(255,255,255,.85); animation:drift 60s linear infinite; }
+.cld::before, .cld::after { content:""; position:absolute; background:inherit; border-radius:50%; }
+.cld::before { width:30px; height:30px; left:10px; top:-14px; }
+.cld::after { width:24px; height:24px; left:34px; top:-9px; }
+.fly { width:5px; height:5px; border-radius:50%; background:#fff3b0; box-shadow:0 0 8px 3px rgba(255,243,176,.7); }
+.zone { position:absolute; bottom:19%; width:150px; margin-left:-75px; text-align:center; transform-origin:50% 100%; cursor:pointer; z-index:10; transition:transform .4s var(--ease), filter .4s, opacity .4s; }
+.zone img { width:150px; display:block; pointer-events:none; }
+.zone.s1 { transform:scale(.55); opacity:.8; filter:grayscale(.55) brightness(.9); }
+.zone.s2 { transform:scale(.7); opacity:.92; filter:grayscale(.25); }
+.zone.s3 { transform:scale(.85); }
+.zone.s4 { filter:drop-shadow(0 0 12px rgba(255,201,74,.75)); }
+.zname { position:absolute; left:50%; top:100%; transform:translateX(-50%); margin-top:6px; white-space:nowrap; opacity:.85; text-shadow:0 1px 3px rgba(0,0,0,.6);
+  font:600 .62rem "Fredoka","Nunito",ui-rounded,system-ui,sans-serif; text-transform:uppercase; letter-spacing:.1em; }
+.zoneFB { width:150px; height:110px; padding:8px; display:grid; place-items:center; border-radius:70px 70px 12px 12px; background:linear-gradient(#6a4f9a,#3c2d66); border:2px solid rgba(255,255,255,.25);
+  font:600 .8rem "Fredoka","Nunito",ui-rounded,system-ui,sans-serif; }
+.plot { width:90px; height:26px; margin:84px auto 0; border:2px dashed rgba(255,255,255,.45); border-radius:50%; }
+.prop { position:absolute; transform-origin:50% 100%; cursor:pointer; }
+.prop img, .prop span { display:block; pointer-events:none; }
+.plant { animation:sway 5s ease-in-out infinite alternate; }
+.walker { animation:wander 40s linear infinite; }
+.flyer { animation:bob 5s ease-in-out infinite alternate; }
+.hop img { animation:hop .4s; }
+.newest { filter:drop-shadow(0 0 8px rgba(255,201,74,.9)); }
+@keyframes wander { 0% { transform:translateX(0) scaleX(1); } 48% { transform:translateX(110px) scaleX(1); } 50% { transform:translateX(110px) scaleX(-1); } 98% { transform:translateX(0) scaleX(-1); } 100% { transform:translateX(0) scaleX(1); } }
+@keyframes bob { from { transform:translate(0,0); } to { transform:translate(18px,-12px); } }
+@keyframes hop { 40% { transform:translateY(-14px); } }
+.rope { position:absolute; left:0; top:6%; pointer-events:none; }
+.lan { position:absolute; top:calc(6% + 2px); width:12px; height:17px; margin-left:-6px; border-radius:5px 5px 7px 7px; pointer-events:none;
+  background:radial-gradient(#fff3b0,#ffc94a 60%,#e8963d); box-shadow:0 0 14px 3px rgba(255,201,74,.55); animation:twinkle 3s ease-in-out infinite alternate; }
+.lan::before { content:""; position:absolute; left:50%; top:-5px; width:1px; height:5px; background:rgba(255,244,224,.6); }
+.lan.leaf { background:radial-gradient(#d9ffe0,#4fbf7a 60%,#2f8f55); box-shadow:0 0 14px 3px rgba(79,191,122,.5); }
+#scene.night .lan { box-shadow:0 0 24px 8px rgba(255,201,74,.6); }
+#scene.night .lan.leaf { box-shadow:0 0 24px 8px rgba(79,191,122,.55); }
+.lvl { position:absolute; left:12px; top:12px; padding:5px 12px; border-radius:14px; background:rgba(18,12,32,.55); backdrop-filter:blur(4px); pointer-events:none;
+  font:600 .7rem "Fredoka","Nunito",ui-rounded,system-ui,sans-serif; letter-spacing:.1em; text-transform:uppercase; }
+
+  /* ===== SANCTUARY CLIMB ===== */
+#home .hero { flex: 1 1 auto; min-height: 340px; }      /* if your .hero has a fixed height, remove it */
+#scene.climbScene { position: relative; height: 100%; overflow: hidden; background: #1d1530; border-radius: inherit; }
+.climb {
+  position: relative; height: 100%; overflow-y: auto;
+  scroll-snap-type: y mandatory; overscroll-behavior: contain;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.climb::-webkit-scrollbar { display: none; }
+#scene.quiet .climb { filter: saturate(.75); }
+
+.tier { position: relative; height: 100%; min-height: 420px; scroll-snap-align: start; scroll-snap-stop: always; overflow: hidden; }
+.tier::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 4;
+  background: linear-gradient(rgba(0,0,0,.28), transparent 20%, transparent 82%, rgba(0,0,0,.32));
+}
+.category-culture      { background: linear-gradient(180deg, #5a2a6e, #b8456a); }
+.category-history      { background: linear-gradient(180deg, #7a3b1d, #e8663d); }
+.category-nature       { background: linear-gradient(180deg, #14532d, #4fbf7a); }
+.category-tourism      { background: linear-gradient(180deg, #1d4e89, #5fb7e8); }
+.category-sports       { background: linear-gradient(180deg, #8a2a1d, #ffc94a); }
+.category-cars         { background: linear-gradient(180deg, #2b2f4a, #e8663d); }
+.category-space        { background: linear-gradient(180deg, #0d0a1f, #2b2158); }
+.category-food         { background: linear-gradient(180deg, #a8431c, #ffc94a); }
+.category-architecture { background: linear-gradient(180deg, #1d1530, #6a4f8f); }
+
+/* grass strip at the foot of every zone */
+.tier::before {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 13%; z-index: 0;
+  background: linear-gradient(rgba(60,130,70,.0), rgba(24,70,40,.55));
+}
+
+.tierHead {
+  position: absolute; top: 12px; left: 0; right: 0; z-index: 5;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-family: "Fredoka", sans-serif; color: #fff7e6; text-shadow: 0 2px 8px rgba(0,0,0,.45);
+}
+.tierHead h3 { margin: 0; font-size: 22px; font-weight: 600; }
+.tierHead img { height: 34px; width: auto; }
+.tierHead .cnt { font-size: 13px; padding: 3px 10px; border-radius: 99px; background: rgba(0,0,0,.3); border: 1px solid rgba(255,201,74,.5); color: #ffc94a; }
+.tierHead .crest { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 99px; background: #ffc94a; color: #1d1530; text-shadow: none; }
+.tierBar { position: absolute; top: 54px; left: 50%; width: 120px; height: 4px; margin-left: -60px; z-index: 5; border-radius: 4px; background: rgba(0,0,0,.3); overflow: hidden; }
+.tierBar i { display: block; height: 100%; background: #ffc94a; border-radius: 4px; transition: width .6s; }
+.tier.locked .tierHead { opacity: .55; filter: grayscale(1); }
+
+/* landmark grows with progress */
+.landmark { position: absolute; left: 50%; top: 52%; z-index: 1; transform: translate(-50%, -50%); cursor: pointer; text-align: center; }
+.landmark img { display: block; max-width: 70vw; filter: drop-shadow(0 10px 18px rgba(0,0,0,.35)); transition: opacity .6s, transform .6s; }
+.tier.s1 .landmark img { opacity: .28; transform: scale(.7); }
+.tier.s2 .landmark img { opacity: .42; transform: scale(.82); }
+.tier.s3 .landmark img { opacity: .6;  transform: scale(.92); }
+.tier.s4 .landmark img { opacity: .9;  transform: scale(1); }
+.landmark .plot, .landmark .zoneFB {
+  width: 150px; height: 100px; display: grid; place-items: center; border-radius: 18px;
+  border: 2px dashed rgba(255,244,224,.4); color: rgba(255,244,224,.7); font: 700 12px "Nunito", sans-serif;
+}
+.tier.locked .landmark { filter: grayscale(1); opacity: .5; pointer-events: none; }
+
+/* trail (dotted fallback) */
+.trail { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+.trail path { fill: none; stroke: rgba(255,244,224,.55); stroke-width: 2.5; stroke-dasharray: 2 7; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+
+/* illustrated zone maps (optional images) */
+.terrain, .pathArt { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; user-select: none; }
+.terrain { object-fit: cover; z-index: 0; }
+.pathArt { object-fit: fill; z-index: 0; }
+.tier.hasPath .trail { display: none; }
+.tier.locked .terrain, .tier.locked .pathArt { filter: grayscale(1) brightness(.6); }
+.tier.s0 .terrain { opacity: .55; }
+.tier.s1 .terrain, .tier.s2 .terrain { opacity: .8; }
+
+/* sanctuary life */
+.prop2 { position: absolute; z-index: 1; cursor: pointer; transform: translateX(-50%); }
+.prop2 img { display: block; pointer-events: none; }
+.walker2 img { animation: idle 3.2s ease-in-out infinite; }
+.flyer2 { animation: drift 7s ease-in-out infinite alternate; }
+.prop2.newest { animation: pop .9s cubic-bezier(.2,1.6,.4,1) both; }
+@keyframes idle  { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+/* @keyframes drift { from { transform: translateX(-50%) translateY(0); } to { transform: translateX(-30%) translateY(-10px); } }
+@keyframes pop   { from { transform: translateX(-50%) scale(0); } to { transform: translateX(-50%) scale(1); } } */
+
+/* nodes */
+.node { position: absolute; z-index: 3; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 2px; width: 76px; padding: 0; border: 0; background: none; cursor: pointer; }
+.node .pin { height: 20px; display: flex; align-items: flex-end; font-size: 16px; animation: nodeBob 2.6s ease-in-out infinite; }
+.node .pin img { height: 20px; width: auto; }
+.node .nCard { width: 58px; height: 58px; border-radius: 14px; background: rgba(255,255,255,.12) center/cover; border: 2px solid rgba(255,255,255,.25); box-shadow: 0 6px 16px rgba(0,0,0,.35); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.node .nName { max-width: 76px; padding: 2px 6px; border-radius: 8px; background: rgba(20,12,36,.5); color: #fff7e6; font: 700 10px/1.1 "Nunito", sans-serif; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.node.done .nCard { border-color: #ffc94a; box-shadow: 0 0 14px rgba(255,201,74,.65), 0 6px 16px rgba(0,0,0,.35); }
+.node.current .nCard { border-color: #ffc94a; animation: nodePulse 1.6s ease-in-out infinite; }
+.node.current .pin { animation-duration: 1.2s; }
+.node.locked { cursor: default; }
+.node.locked .nCard { opacity: .5; }
+.node.locked .nCard::after { content: "🔒"; display: grid; place-items: center; height: 100%; font-size: 20px; }
+.node.locked .pin, .node.locked .nName { opacity: .45; filter: grayscale(1); }
+@keyframes nodeBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes nodePulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,201,74,.7), 0 6px 16px rgba(0,0,0,.35); } 50% { box-shadow: 0 0 0 10px rgba(255,201,74,0), 0 6px 16px rgba(0,0,0,.35); } }
+
+/* zone rail */
+.rail { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); z-index: 8; display: flex; flex-direction: column; gap: 9px; padding: 8px 5px; border-radius: 99px; background: rgba(20,12,36,.4); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.rail i { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid rgba(255,244,224,.6); cursor: pointer; transition: transform .2s, background .2s; }
+.rail i.part { background: rgba(255,201,74,.45); }
+.rail i.full { background: #ffc94a; border-color: #ffc94a; }
+.rail i.on { transform: scale(1.5); border-color: #fff; }
+
+/* calibration mode: let taps reach the zone itself */
+body.calib .node, body.calib .landmark, body.calib .prop2 { pointer-events: none; }
+body.calib .tier { cursor: crosshair; }
+
+@media (prefers-reduced-motion: reduce) {
+  .node .pin, .node.current .nCard, .walker2 img, .flyer2, .prop2.newest { animation: none; }
+}
+
+/* ===== CLIMB FIXES ===== */
+
+/* 1. Give the scene a real height. Percent heights collapse here, because .hero has no fixed height */
+#home .hero { flex: none; min-height: 0; }
+.hero #scene.climbScene {
+  height: clamp(420px, 56vh, 540px); min-height: 420px; max-height: none;
+  border-radius: 26px; isolation: isolate;
+}
+#scene.quiet .climb { filter: none; }                 /* #scene.quiet already dims the whole scene */
+
+/* 2. Nodes are <button>s, so cancel the global chunky-button styling */
+.node {
+  min-height: 0; box-shadow: none; border-radius: 0; color: inherit;
+  font-family: inherit; transition: none;
+}
+.node:active { transform: translate(-50%, -50%) scale(.95); box-shadow: none; }
+
+/* 3. Inline widths on sprites were stretching these images */
+.tierHead img { height: 34px; width: auto !important; }
+.node .pin img { height: 20px; width: auto !important; }
+
+/* 4. The old .plot rule adds a top margin */
+.landmark .plot { margin: 0; }
+
+/* 5. The status pill must sit above the scene layers */
+.pill { z-index: 12; pointer-events: none; }
+
+/* 6. Bigger tap area for the rail dots */
+.rail i { position: relative; }
+.rail i::after { content: ""; position: absolute; inset: -8px; }
+
+/* 7. Renamed animations (no clash with the card pop and cloud drift) */
+@keyframes climbDrift { from { transform: translateX(-50%) translateY(0); } to { transform: translateX(-30%) translateY(-10px); } }
+@keyframes climbPop   { from { transform: translateX(-50%) scale(0); } to { transform: translateX(-50%) scale(1); } }
+.flyer2 { animation: climbDrift 7s ease-in-out infinite alternate; }
+.prop2.newest { animation: climbPop .9s cubic-bezier(.2,1.6,.4,1) both; }
+
+/* ===== CONTINUOUS MAP ===== */
+.climb { scroll-snap-type: none; }
+.tier { scroll-snap-align: none; scroll-snap-stop: normal; }
+.tier::before, .tier::after { display: none; }          /* no seams between zones */
+.tierHead, .tierBar, .rail { display: none !important; } /* old headers and rail */
+
+/* fade each zone's artwork into its neighbours */
+.terrain, .pathArt {
+  -webkit-mask-image: linear-gradient(transparent, #000 14%, #000 86%, transparent);
+          mask-image: linear-gradient(transparent, #000 14%, #000 86%, transparent);
+}
+
+/* single zone chip that follows the scroll */
+.zoneHud {
+  position: absolute; top: 12px; left: 12px; z-index: 9; pointer-events: none;
+  display: grid; grid-template-columns: auto auto auto; align-items: center; gap: 4px 8px;
+  padding: 7px 12px 8px; border-radius: 16px;
+  background: rgba(18,12,32,.55); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.12);
+}
+.zoneHud .zIcon img { height: 24px; width: auto !important; display: block; }
+.zoneHud b { font: 600 .9rem "Fredoka", sans-serif; color: #fff7e6; }
+.zoneHud em { font: 700 .72rem "Nunito", sans-serif; font-style: normal; color: var(--gold); }
+.zoneHud .zBar { grid-column: 1 / -1; height: 3px; border-radius: 3px; background: rgba(255,255,255,.18); overflow: hidden; }
+.zoneHud .zBar u { display: block; height: 100%; background: var(--gold); transition: width .4s; }
+.zoneHud.done em::after { content: " ✓"; }
+/* road look + compact zones */
+.trail path.roadBed { stroke: rgba(255,244,224,.16); stroke-width: 18; stroke-dasharray: none; }
+.tier { min-height: 0; }
+
+/* ===== REALISM PASS ===== */
+.scenery {
+  position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none;
+  -webkit-mask-image: linear-gradient(transparent, #000 12%, #000 88%, transparent);
+          mask-image: linear-gradient(transparent, #000 12%, #000 88%, transparent);
+}
+.tier.locked .scenery { filter: grayscale(.8) brightness(.7); }
+
+/* film grain over every zone */
+.tier::before {
+  display: block; content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; height: auto;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  opacity: .12; mix-blend-mode: overlay;
+}
+
+/* depth vignette around the whole scene */
+#scene.climbScene::after {
+  content: ""; position: absolute; inset: 0; z-index: 10; pointer-events: none; border-radius: inherit;
+  box-shadow: inset 0 0 70px rgba(10,6,20,.55);
+}
+
+/* road: shadow, edge, surface, centre line */
+.trail path { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: none; vector-effect: non-scaling-stroke; }
+.trail .rShade { stroke: rgba(0,0,0,.28); stroke-width: 28px; }
+.trail .rEdge  { stroke: #7a5a3a; stroke-width: 21px; }
+.trail .rSurf  { stroke: #d8b987; stroke-width: 16px; }
+.trail .rLine  { stroke: rgba(255,248,230,.6); stroke-width: 2px; stroke-dasharray: 3 10; }
+.category-cars .rSurf, .category-architecture .rSurf, .category-sports .rSurf { stroke: #3b3b48; }
+.category-cars .rEdge, .category-architecture .rEdge, .category-sports .rEdge { stroke: #20202a; }
+.category-space .rSurf { stroke: #7a68e0; }
+.category-space .rEdge { stroke: #3a2a8a; }
+.category-space .rShade { stroke: rgba(122,104,224,.3); }
+.landmark { display: none !important; }
+/* ===== BRIGHTER TILES ===== */
+.node .nCard {
+  width: 66px; height: 66px; opacity: 1;
+  background-color: #fff4e0; background-size: cover; background-position: center;
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px rgba(0,0,0,.35), 0 0 14px rgba(255,255,255,.55), 0 6px 14px rgba(0,0,0,.5);
+  filter: brightness(1.15) saturate(1.2);
+}
+.node .nName { background: #1d1530; color: #fff; opacity: 1; font-size: 11px; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.node .pin { filter: drop-shadow(0 2px 3px rgba(0,0,0,.6)); }
+
+/* done: strong gold glow */
+.node.done .nCard { border-color: #ffc94a; box-shadow: 0 0 0 2px rgba(255,201,74,.7), 0 0 22px rgba(255,201,74,1), 0 6px 14px rgba(0,0,0,.5); }
+.node.current .nCard { border-color: #fff3b0; }
+
+/* locked: solid bright purple, not faded */
+.node.locked .nCard { opacity: 0.7; filter: none; background-image: linear-gradient(160deg, #ead87b, #83a03f); border-color: #fff; }
+.node.locked .nCard::after { font-size: 26px; }
+.node.locked .pin, .node.locked .nName { opacity: 1; filter: none; }
+
+/* ===== PER-CATEGORY TILE COLOURS ===== */
+/* --c1 = bright colour (borders, road dashes), --c2 = deep colour (locked card, name label), --glow = glow */
+.category-culture      { --c1:#ff7ac8; --c2:#8a2a9a; --glow:#ff5cbc; }
+.category-history      { --c1:#ffb347; --c2:#b4601a; --glow:#ff9a2a; }
+.category-nature       { --c1:#6af09a; --c2:#1f7a45; --glow:#3fe07a; }
+.category-tourism      { --c1:#6ecbff; --c2:#1d5aa0; --glow:#3fb2ff; }
+.category-sports       { --c1:#ff6a5a; --c2:#a81f1f; --glow:#ff4a3a; }
+.category-cars         { --c1:#3fe0cf; --c2:#0f6a70; --glow:#1fd0be; }
+.category-space        { --c1:#a58aff; --c2:#3a1fa0; --glow:#8a6bff; }
+.category-food         { --c1:#ffd83a; --c2:#c98a00; --glow:#ffc800; }
+.category-architecture { --c1:#d6def5; --c2:#566a96; --glow:#b8c6ee; }
+
+/* tile border and glow follow the zone */
+.tier .node .nCard { border-color: var(--c1); }
+.tier .node.done .nCard {
+  border-color: var(--c1);
+  box-shadow: 0 0 0 2px var(--c2), 0 0 22px var(--glow), 0 6px 14px rgba(0,0,0,.5);
+}
+.tier .node.current .nCard {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px var(--c1), 0 0 24px var(--glow), 0 6px 14px rgba(0,0,0,.5);
+  animation: nodePulseC 1.6s ease-in-out infinite;
+}
+@keyframes nodePulseC {
+  0%,100% { box-shadow: 0 0 0 2px var(--c1), 0 0 10px var(--glow), 0 6px 14px rgba(0,0,0,.5); }
+  50%     { box-shadow: 0 0 0 4px var(--c1), 0 0 30px var(--glow), 0 6px 14px rgba(0,0,0,.5); }
+}
+
+/* locked tiles: each zone gets its own colour, not one shared purple */
+.tier .node.locked .nCard {
+  background-image: linear-gradient(160deg, var(--c1), var(--c2));
+  border-color: var(--c1);
+}
+
+/* name label in the zone colour */
+.tier .node .nName {
+  background: var(--c2); color: #fff;
+  border: 1px solid var(--c1);
+}
+
+/* the road dashes take the zone colour too */
+.tier .trail .rLine { stroke: var(--c1); }
+.tier .trail { filter: drop-shadow(0 0 5px var(--glow)); }
+
+/* ===== STOP SHEET ===== */
+#sheet { position: fixed; inset: 0; z-index: 10; display: flex; align-items: flex-end; justify-content: center; background: rgba(10,6,20,.6); animation: fade .25s; }
+.sheetBox {
+  position: relative; width: min(100vw, 480px); padding: 12px 20px calc(22px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center;
+  border-radius: 26px 26px 0 0; background: linear-gradient(#3c2d66, #2d2150);
+  border-top: 3px solid var(--c1, #ffc94a); box-shadow: 0 -12px 40px rgba(0,0,0,.5);
+  animation: sheetUp .35s var(--ease);
+}
+@keyframes sheetUp { from { transform: translateY(100%); } }
+.sheetHandle { width: 44px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.3); margin-bottom: 4px; }
+#sheetImg {
+  width: 96px; height: 96px; border-radius: 20px; background-size: cover; background-position: center;
+  border: 3px solid var(--c1, #ffc94a); box-shadow: 0 0 22px var(--glow, rgba(255,201,74,.6)), 0 6px 14px rgba(0,0,0,.5);
+}
+#sheet[data-state="locked"] #sheetImg { filter: blur(10px) grayscale(.4); }
+#sheetKicker { text-transform: uppercase; letter-spacing: .14em; font-size: .68rem; color: var(--c1, #ffc94a); }
+#sheet h3 { margin: 0; font: 600 1.4rem "Fredoka", sans-serif; }
+#sheetText { opacity: .8; font-size: .92rem; max-width: 320px; }
+#sheetBtn { margin-top: 6px; width: min(100%, 320px); }
+#sheet[data-state="locked"] #sheetBtn { background: var(--card); color: var(--cream); box-shadow: 0 5px 0 #1f1636; }
+
+#playSub { display: none; }
