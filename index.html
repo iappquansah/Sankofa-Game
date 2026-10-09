@@ -118,12 +118,48 @@
   <div id="toast" class="hidden"></div>
 
   <!-- BOTTOM TAB BAR -->
-  <nav id="tabbar">
+  <!-- <nav id="tabbar">
     <button class="tab" id="tabHome" data-s="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Home</button>
     <button class="tab" id="tabExplore" data-s="exploreScreen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.500 8.500l-2 5-5 2 2-5z"/></svg>Explore</button>
     <button class="tab" id="tabRace" data-s="raceMenu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4m0 0h11l-2 4 2 4H5"/></svg>Race</button>
     <button class="tab" id="tabJournal" data-s="journalScreen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19a2 2 0 0 1 2-2h13"/></svg>Journal</button>
-  </nav>
+  </nav> -->
+  <nav id="tabbar">
+  <button class="tab" id="tabHome" data-s="home">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="currentColor" d="M12 2.6 1.9 11.3a1 1 0 0 0 .65 1.76H4V20a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6.94h1.45a1 1 0 0 0 .65-1.76z"/>
+      <rect x="9.5" y="14" width="5" height="8" rx="1.4" fill="#000" fill-opacity=".3"/>
+    </svg>Home
+  </button>
+  <button class="tab" id="tabExplore" data-s="exploreScreen">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" fill="currentColor"/>
+      <circle cx="12" cy="12" r="7.6" fill="none" stroke="#000" stroke-opacity=".25" stroke-width="1.2"/>
+      <path d="M16.6 7.4 13.5 13.5 7.4 16.6 10.5 10.5z" fill="#000" fill-opacity=".55"/>
+      <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+    </svg>Explore
+  </button>
+  <button class="tab" id="tabRace" data-s="raceMenu">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="3.6" y="2.4" width="2.6" height="19.6" rx="1.3" fill="currentColor"/>
+      <rect x="6.2" y="3.5" width="14" height="9.6" fill="currentColor"/>
+      <g fill="#000" fill-opacity=".4">
+        <rect x="9.7" y="3.5" width="3.5" height="3.2"/><rect x="16.7" y="3.5" width="3.5" height="3.2"/>
+        <rect x="6.2" y="6.7" width="3.5" height="3.2"/><rect x="13.2" y="6.7" width="3.5" height="3.2"/>
+        <rect x="9.7" y="9.9" width="3.5" height="3.2"/><rect x="16.7" y="9.9" width="3.5" height="3.2"/>
+      </g>
+    </svg>Race
+  </button>
+  <button class="tab" id="tabJournal" data-s="journalScreen">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="4" y="2.4" width="16" height="19.2" rx="2.6" fill="currentColor"/>
+      <path d="M4 5a2.6 2.6 0 0 1 2.6-2.6H8v19.2H6.6A2.6 2.6 0 0 1 4 19z" fill="#000" fill-opacity=".25"/>
+      <path d="M14.6 2.4v8.2l2.2-1.7 2.2 1.7V2.4z" fill="#000" fill-opacity=".5"/>
+      <rect x="10" y="14.4" width="7" height="1.9" rx=".95" fill="#000" fill-opacity=".3"/>
+      <rect x="10" y="17.6" width="4.5" height="1.9" rx=".95" fill="#000" fill-opacity=".3"/>
+    </svg>Journal
+  </button>
+</nav>
 
   <!-- DEBUG (tap the logo 5 times) -->
   <div id="debug" class="hidden">

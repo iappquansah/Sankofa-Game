@@ -947,3 +947,69 @@ body #raceResult { background: rgba(10,6,20,.82); backdrop-filter: blur(6px); -w
 }
 .jItem.locked::after { display: none; }
 .jItem.locked:active { transform: none; }
+/* ===== TAB BAR: GAME BUTTONS ===== */
+#tabbar {
+  gap: 10px; align-items: flex-end; justify-content: center;
+  padding: 10px 12px calc(14px + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, #2a1f47, #170f2a);
+  border-top: 3px solid #120c20;
+  border-radius: 0;
+  box-shadow: 0 -6px 20px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.07);
+}
+
+/* each tab = a raised key */
+.tab {
+  position: relative; flex: 1; max-width: 96px; min-width: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  padding: 9px 4px 8px; border-radius: 16px;
+  background: linear-gradient(180deg, #4a3a78 0%, #352858 100%);
+  color: rgba(255,244,224,.7); opacity: 1;
+  font: 600 .7rem "Fredoka", "Nunito", sans-serif; letter-spacing: .04em;
+  box-shadow:
+    0 5px 0 #1a1230,
+    0 8px 10px rgba(0,0,0,.4),
+    inset 0 2px 0 rgba(255,255,255,.22);
+  transition: transform .08s, box-shadow .08s, background .15s, color .15s;
+}
+
+/* glossy highlight on the top half */
+.tab::after {
+  content: ""; position: absolute; left: 4px; right: 4px; top: 3px; height: 42%;
+  border-radius: 12px 12px 20px 20px; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,0));
+}
+.tab::before { content: none; }
+.tab svg { width: 24px; height: 24px; transition: transform .2s var(--ease); filter: drop-shadow(0 2px 0 rgba(0,0,0,.35)); }
+
+/* press: key sinks onto its lip */
+.tab:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 #1a1230, 0 2px 4px rgba(0,0,0,.4), inset 0 2px 0 rgba(255,255,255,.18);
+}
+
+/* active tab: solid gold key */
+body[data-screen="home"] .tab[data-s="home"],
+body[data-screen="exploreScreen"] .tab[data-s="exploreScreen"],
+body[data-screen="journalScreen"] .tab[data-s="journalScreen"],
+body[data-screen="raceMenu"] .tab[data-s="raceMenu"] {
+  background: linear-gradient(180deg, #ffe27a 0%, #ffc94a 100%);
+  color: var(--ink);
+  box-shadow:
+    0 5px 0 #c98a00,
+    0 8px 14px rgba(255,201,74,.35),
+    inset 0 2px 0 rgba(255,255,255,.6);
+}
+body[data-screen="home"] .tab[data-s="home"]:active,
+body[data-screen="exploreScreen"] .tab[data-s="exploreScreen"]:active,
+body[data-screen="journalScreen"] .tab[data-s="journalScreen"]:active,
+body[data-screen="raceMenu"] .tab[data-s="raceMenu"]:active {
+  box-shadow: 0 1px 0 #c98a00, 0 2px 6px rgba(255,201,74,.3), inset 0 2px 0 rgba(255,255,255,.5);
+}
+body[data-screen="home"] .tab[data-s="home"] svg,
+body[data-screen="exploreScreen"] .tab[data-s="exploreScreen"] svg,
+body[data-screen="journalScreen"] .tab[data-s="journalScreen"] svg,
+body[data-screen="raceMenu"] .tab[data-s="raceMenu"] svg {
+  transform: scale(1.12); filter: drop-shadow(0 2px 0 rgba(255,255,255,.35));
+}
+/* solid tab icons */
+.tab svg { width: 27px; height: 27px; }

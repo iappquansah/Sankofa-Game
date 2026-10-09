@@ -990,7 +990,10 @@ $("helpBtn").onclick = () => $("tutorial").classList.remove("hidden");
 $("tutOk").onclick = () => { save.seenTutorial = true; writeSave(); $("tutorial").classList.add("hidden"); };
 
 // Every button gives a soft click (audio feedback on all interactions)
-document.addEventListener("click", e => { if (e.target.closest("button")) tone(660, 0.07, 0.07); });
+// document.addEventListener("click", e => { if (e.target.closest("button")) tone(660, 0.07, 0.07); });
+document.addEventListener("click", e => {
+  if (e.target.closest("button") && !e.target.closest("#tabbar")) tone(660, 0.07, 0.07);
+});
 
 /* ---------- HOME BUTTONS ---------- */
 $("beginBtn").onclick = () => { startAmbient(); startPuzzle(); };
