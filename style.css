@@ -881,3 +881,69 @@ body #raceResult { background: rgba(10,6,20,.82); backdrop-filter: blur(6px); -w
 #raceResult .rrow b { color: var(--gold); }
 #raceResult .row { flex-wrap: nowrap; }
 #raceResult .row button { flex: 1; }
+
+/* ===== JOURNAL: POLISHED ===== */
+#journalScreen { justify-content: flex-start; gap: 20px; padding-top: 0; }
+
+/* sticky header with overall progress */
+.jHead {
+  position: sticky; top: 0; z-index: 5; align-self: stretch; margin: 0 -16px;
+  padding: calc(16px + env(safe-area-inset-top)) 20px 16px; text-align: left;
+  background: rgba(29,21,48,.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 10px 24px rgba(0,0,0,.28);
+}
+.jHead h2 { font-size: 1.8rem; line-height: 1; }
+.jHead small { display: block; margin: 6px 0 12px; font-size: .8rem; opacity: .65; letter-spacing: .04em; }
+.jBar { height: 10px; border-radius: 99px; background: #120c20; box-shadow: inset 0 2px 4px rgba(0,0,0,.6); overflow: hidden; }
+.jBar i { display: block; height: 100%; width: 0; border-radius: 99px; transition: width .6s;
+  background: linear-gradient(90deg, #ffc94a, #ffe27a); box-shadow: 0 0 10px rgba(255,201,74,.6); }
+
+/* category sections */
+#journalGrid { display: flex; flex-direction: column; gap: 24px; width: min(94vw, 480px); }
+.jSec { --cc: #ffc94a; text-align: left; }
+.jSec[data-cat="culture"]      { --cc: #ff7ac8; }
+.jSec[data-cat="history"]      { --cc: #ffb347; }
+.jSec[data-cat="nature"]       { --cc: #6af09a; }
+.jSec[data-cat="tourism"]      { --cc: #6ecbff; }
+.jSec[data-cat="sports"]       { --cc: #ff6a5a; }
+.jSec[data-cat="cars"]         { --cc: #3fe0cf; }
+.jSec[data-cat="space"]        { --cc: #a58aff; }
+.jSec[data-cat="food"]         { --cc: #ffd83a; }
+.jSec[data-cat="architecture"] { --cc: #d6def5; }
+
+.jSecHead { display: flex; align-items: center; gap: 10px; margin: 0 2px 12px; }
+.jSecHead h3 { margin: 0; font: 600 1.1rem "Fredoka", "Nunito", sans-serif; }
+.jSecHead::after { content: ""; order: 2; flex: 1; height: 2px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--cc), transparent); opacity: .6; }
+.jCnt { order: 3; padding: 3px 10px; border-radius: 99px; background: #120c20;
+  border: 1.5px solid var(--cc); color: var(--cc); font: 700 .72rem "Nunito", sans-serif; }
+.jSec.full .jCnt { background: var(--cc); color: var(--ink); }
+
+/* tiles */
+.jRow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; padding: 4px; }
+@media (min-width: 700px) { #journalGrid { width: min(94vw, 760px); } .jRow { grid-template-columns: repeat(4, 1fr); } }
+
+.jItem {
+  position: relative; overflow: hidden; aspect-ratio: 1; border-radius: 16px;
+  background-size: cover; background-position: center;
+  border: 3px solid var(--cc);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.45), 0 0 12px var(--cc), 0 0 22px color-mix(in srgb, var(--cc) 40%, transparent);
+  animation: exIn .45s var(--ease) backwards; animation-delay: var(--d, 0ms);
+  transition: transform .1s;
+}
+.jItem:active { transform: scale(.96); }
+.jItem::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to top, rgba(10,6,20,.85), rgba(10,6,20,0) 50%); }
+.jItem .jName {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; padding: 6px 7px; background: none;
+  font: 600 .7rem/1.15 "Fredoka", "Nunito", sans-serif; text-shadow: 0 1px 3px #000; text-align: center;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* not yet restored */
+.jItem.locked {
+  background: #120c20; border: 2px dashed rgba(255,255,255,.2); box-shadow: inset 0 3px 8px rgba(0,0,0,.5);
+  color: rgba(255,255,255,.28); font: 700 1.5rem "Fredoka", sans-serif; opacity: 1; cursor: default;
+}
+.jItem.locked::after { display: none; }
+.jItem.locked:active { transform: none; }

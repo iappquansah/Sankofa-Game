@@ -891,17 +891,53 @@ $("shareBtn").onclick = async () => {
 };
 
 /* ---------- JOURNAL ---------- */
+// function renderJournal() {
+//   const grid = $("journalGrid"); grid.innerHTML = "";
+//   PUZZLES.forEach((p, i) => {
+//     const d = document.createElement("div");
+//     if (save.journal.includes(i)) {
+//       d.className = "jItem"; d.style.backgroundImage = `url(${p.image})`;
+//       d.onclick = () => showCard(i, false, null, "journal", save.deep.includes(i));
+//     } else { d.className = "jItem locked"; d.textContent = "?"; }
+//     grid.appendChild(d);
+//   });
+// }
 function renderJournal() {
   const grid = $("journalGrid"); grid.innerHTML = "";
-  PUZZLES.forEach((p, i) => {
-    const d = document.createElement("div");
-    if (save.journal.includes(i)) {
-      d.className = "jItem"; d.style.backgroundImage = `url(${p.image})`;
-      d.onclick = () => showCard(i, false, null, "journal", save.deep.includes(i));
-    } else { d.className = "jItem locked"; d.textContent = "?"; }
-    grid.appendChild(d);
+  const total = PUZZLES.length, got = save.journal.length;
+  $("jCount").textContent = `${got} of ${total} restored`;
+  $("jBarFill").style.width = Math.round(got / total * 100) + "%";
+
+  let n = 0;
+  CATEGORIES.forEach(c => {
+    const list = PUZZLES.map((p, i) => ({ p, i })).filter(o => o.p.cat === c.id);
+    if (!list.length) return;
+    const done = list.filter(o => save.journal.includes(o.i)).length;
+
+    const sec = document.createElement("section");
+    sec.className = "jSec" + (done === list.length ? " full" : "");
+    sec.dataset.cat = c.id;
+    sec.innerHTML = `<header class="jSecHead"><h3>${c.name}</h3><span class="jCnt">${done}/${list.length}</span></header><div class="jRow"></div>`;
+    const row = sec.querySelector(".jRow");
+
+    list.forEach(o => {
+      const d = document.createElement("div");
+      d.style.setProperty("--d", Math.min(n++, 14) * 30 + "ms");
+      if (save.journal.includes(o.i)) {
+        d.className = "jItem";
+        d.style.backgroundImage = `url(${o.p.image})`;
+        d.innerHTML = `<span class="jName">${o.p.name}</span>`;
+        d.onclick = () => showCard(o.i, false, null, "journal", save.deep.includes(o.i));
+      } else {
+        d.className = "jItem locked";
+        d.textContent = "?";
+      }
+      row.appendChild(d);
+    });
+    grid.appendChild(sec);
   });
 }
+
 $("tabJournal").onclick = () => { renderJournal(); showScreen("journalScreen"); };
 $("journalBack").onclick = () => { refreshHome(); showScreen("home"); };
 
