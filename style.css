@@ -1,6 +1,3 @@
-/* ===== SANKOFA SANCTUARY: design system "Dusk Savannah" =====
-   Palette: dominant aubergine + gold primary accent + terracotta/green supporting.
-   Shape: rounded 18px. Depth: chunky pressable buttons. Type: Fredoka (display) + Nunito (body). */
 :root { --bg:#1d1530; --bg2:#2b1f45; --card:#352858; --cream:#fff4e0; --gold:#ffc94a; --gold-d:#c98a00; --terra:#e8663d; --green:#4fbf7a; --ink:#2a1a05; --r:18px; --ease:cubic-bezier(.34,1.56,.64,1); }
 * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 html, body { margin:0; }
@@ -19,7 +16,6 @@ body.nonav .screen { padding-bottom:20px; }
 .message { opacity:.8; font-size:.95rem; max-width:420px; min-height:1.2em; }
 .row { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
 
-/* Buttons: chunky, pressable, instant feedback */
 button { border:0; border-radius:var(--r); padding:14px 22px; min-height:50px; font-size:1.05rem; font-weight:600; cursor:pointer;
   color:var(--ink); background:var(--gold); box-shadow:0 5px 0 var(--gold-d); transition:transform .08s, box-shadow .08s; }
 button:active { transform:translateY(4px); box-shadow:0 1px 0 var(--gold-d); }
@@ -33,7 +29,6 @@ button:disabled { opacity:.5; }
 .chip:active { transform:scale(.95); box-shadow:none; }
 .chip.on { background:var(--gold); color:var(--ink); border-color:var(--gold); }
 
-/* HUD */
 .hud { width:min(94vw,480px); display:flex; justify-content:space-between; align-items:center; padding-bottom:12px; position:relative; }
 .hud::after { content:""; position:absolute; left:0; right:0; bottom:0; height:5px; border-radius:3px;
   background:repeating-linear-gradient(90deg,#ffc94a 0 14px,#e8663d 14px 28px,#4fbf7a 28px 42px,#1d1530 42px 56px); }
@@ -51,7 +46,6 @@ button:disabled { opacity:.5; }
 .proverb { font-style:italic; opacity:.8; font-size:.9rem; }
 #streakText { font-size:.8rem; opacity:.6; }
 
-/* Sanctuary scene */
 #scene { position:relative; width:min(94vw,480px); height:42vh; min-height:240px; border-radius:26px; overflow:hidden;
   border:3px solid rgba(255,255,255,.14); box-shadow:0 12px 30px rgba(0,0,0,.45); transition:filter .6s; }
 #scene::before { content:""; position:absolute; left:-20%; width:90%; bottom:18%; height:34%; border-radius:50%; background:rgba(40,90,60,.55); }
@@ -69,7 +63,6 @@ button:disabled { opacity:.5; }
 .fly { position:absolute; animation:twinkle 2.5s ease-in-out infinite alternate; }
 @keyframes twinkle { from { opacity:.2; transform:translateY(0); } to { opacity:1; transform:translateY(-10px); } }
 
-/* Tab bar (thumb zone) */
 #tabbar { position:fixed; left:0; right:0; bottom:0; z-index:8; display:flex; justify-content:space-around;
   padding:8px 8px calc(8px + env(safe-area-inset-bottom)); background:rgba(29,21,48,.94); backdrop-filter:blur(10px); border-top:1px solid rgba(255,255,255,.1); }
 body.nonav #tabbar { display:none; }
@@ -83,7 +76,6 @@ body[data-screen="home"] .tab[data-s="home"] svg, body[data-screen="exploreScree
 body[data-screen="journalScreen"] .tab[data-s="journalScreen"] svg, body[data-screen="raceMenu"] .tab[data-s="raceMenu"] svg { transform:scale(1.18); }
 #journalBack, #exBack, #raceMenuBack { display:none; }
 
-/* Puzzle */
 #puzzleLayout { display:flex; flex-direction:column; align-items:center; gap:12px; }
 #refPanel { display:flex; align-items:center; gap:12px; background:var(--card); padding:8px 16px 8px 8px; border-radius:18px; box-shadow:0 4px 0 #1f1636; }
 #refPanel img { width:72px; height:72px; border-radius:12px; border:3px solid var(--cream); box-shadow:0 3px 8px rgba(0,0,0,.4); transform:rotate(-3deg); transition:opacity 1s, filter 1s; }
@@ -109,7 +101,6 @@ body[data-screen="journalScreen"] .tab[data-s="journalScreen"] svg, body[data-sc
 #board.solved { gap:0; pointer-events:none; border-radius:12px; overflow:hidden; box-shadow:0 0 40px rgba(255,201,74,.6); }
 #board.solved .tile { border-radius:0; box-shadow:none; }
 
-/* Explore + Journal */
 #journalGrid, #exGrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:10px; width:min(94vw,480px); }
 #exCats, #exSizes { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; max-width:480px; }
 .jItem { position:relative; overflow:hidden; aspect-ratio:1; border-radius:14px; background-size:cover; background-position:center; display:grid; place-items:center; cursor:pointer;
@@ -118,7 +109,6 @@ body[data-screen="journalScreen"] .tab[data-s="journalScreen"] svg, body[data-sc
 .jItem.locked { background:var(--card); opacity:.55; font-size:1.6rem; cursor:default; }
 .jItem .jName { position:absolute; left:0; right:0; bottom:0; background:rgba(0,0,0,.65); font-size:.65rem; padding:3px; }
 
-/* Heritage card (collectible) */
 #card, #tutorial { position:fixed; inset:0; background:rgba(10,6,20,.78); display:grid; place-items:center; padding:16px; z-index:10; animation:fade .3s; }
 .cardBox { background:linear-gradient(#3c2d66,#2d2150); border-radius:26px; padding:18px; width:min(94vw,440px); max-height:92vh; overflow:auto; text-align:center; display:flex; flex-direction:column; gap:10px;
   border:2px solid rgba(255,201,74,.35); box-shadow:0 20px 50px rgba(0,0,0,.6); animation:pop .5s var(--ease); }
@@ -137,7 +127,6 @@ body[data-screen="journalScreen"] .tab[data-s="journalScreen"] svg, body[data-sc
 #debug input { padding:6px; width:120px; }
 @media (prefers-reduced-motion:reduce) { * { animation:none !important; transition:none !important; } }
 
-/* ===== Explore (v5) ===== */
 #exploreScreen { justify-content:flex-start; gap:14px; padding-top:0; }
 .exHead { position:sticky; top:0; z-index:5; align-self:stretch; margin:0 -16px; padding:calc(14px + env(safe-area-inset-top)) 16px 12px;
   display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center; background:rgba(29,21,48,.92); backdrop-filter:blur(10px); border-bottom:1px solid rgba(255,255,255,.08); }
@@ -164,7 +153,6 @@ body[data-screen="journalScreen"] .tab[data-s="journalScreen"] svg, body[data-sc
 .exDone { position:absolute; top:8px; right:8px; width:24px; height:24px; border-radius:50%; background:var(--green); display:grid; place-items:center; box-shadow:0 2px 6px rgba(0,0,0,.4); }
 @media (min-width:700px) { #exList { grid-template-columns:repeat(3,1fr); width:min(94vw,720px); } .exHead { padding-inline:calc((100% - 700px) / 2 + 16px); } }
 
-/* ===== Explore tiles (v6) ===== */
 #exList { grid-template-columns:repeat(3,1fr); gap:10px; width:min(94vw,480px); }
 .exCard { aspect-ratio:1; border-radius:16px; background-size:cover; background-position:center; box-shadow:0 3px 0 #1f1636; border:2px solid rgba(255,255,255,.14); }
 .exCard::after { content:""; position:absolute; inset:0; background:linear-gradient(to top, rgba(10,6,20,.85), rgba(10,6,20,0) 55%); }
@@ -173,7 +161,6 @@ body[data-screen="journalScreen"] .tab[data-s="journalScreen"] svg, body[data-sc
 .exDone { z-index:2; }
 @media (min-width:700px) { #exList { grid-template-columns:repeat(4,1fr); width:min(94vw,720px); } }
 
-/* ===== Home (v7) ===== */
 #home { gap:14px; }
 .hero { position:relative; width:min(94vw,480px); }
 .hero #scene { width:100%; height:46vh; min-height:250px; max-height:420px; }
@@ -191,7 +178,6 @@ body[data-screen="journalScreen"] .tab[data-s="journalScreen"] svg, body[data-sc
 #playSub { font-size:.8rem; opacity:.65; }
 .bigBtn.secondary { animation:none; }
 
-/* ===== Daily Challenge (v8) ===== */
 .dailyCard { grid-column:1 / -1; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; border-radius:18px; text-align:left; cursor:pointer;
   background:linear-gradient(135deg,#e8663d,#b8432a); box-shadow:0 4px 0 #1f1636; transition:transform .1s, box-shadow .1s; }
 .dailyCard:active { transform:translateY(3px); box-shadow:0 1px 0 #1f1636; }
@@ -199,7 +185,6 @@ body[data-screen="journalScreen"] .tab[data-s="journalScreen"] svg, body[data-sc
 .dailyCard b { font:600 .95rem/1.2 "Fredoka","Nunito",ui-rounded,system-ui,sans-serif; }
 .dailyGo { background:var(--cream); color:var(--ink); padding:8px 14px; border-radius:14px; white-space:nowrap; font:600 .85rem "Fredoka","Nunito",ui-rounded,system-ui,sans-serif; }   
 
-/* ===== Sanctuary engine (v9) ===== */
 #scene::before { display:none; }
 #scene .sky { position:absolute; inset:0; pointer-events:none; }
 .hl { position:absolute; left:0; width:2000px; height:40%; bottom:26%; pointer-events:none; will-change:transform; }
@@ -246,8 +231,7 @@ body[data-screen="journalScreen"] .tab[data-s="journalScreen"] svg, body[data-sc
 .lvl { position:absolute; left:12px; top:12px; padding:5px 12px; border-radius:14px; background:rgba(18,12,32,.55); backdrop-filter:blur(4px); pointer-events:none;
   font:600 .7rem "Fredoka","Nunito",ui-rounded,system-ui,sans-serif; letter-spacing:.1em; text-transform:uppercase; }
 
-  /* ===== SANCTUARY CLIMB ===== */
-#home .hero { flex: 1 1 auto; min-height: 340px; }      /* if your .hero has a fixed height, remove it */
+#home .hero { flex: 1 1 auto; min-height: 340px; }
 #scene.climbScene { position: relative; height: 100%; overflow: hidden; background: #1d1530; border-radius: inherit; }
 .climb {
   position: relative; height: 100%; overflow-y: auto;
@@ -272,7 +256,6 @@ body[data-screen="journalScreen"] .tab[data-s="journalScreen"] svg, body[data-sc
 .category-food         { background: linear-gradient(180deg, #a8431c, #ffc94a); }
 .category-architecture { background: linear-gradient(180deg, #1d1530, #6a4f8f); }
 
-/* grass strip at the foot of every zone */
 .tier::before {
   content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 13%; z-index: 0;
   background: linear-gradient(rgba(60,130,70,.0), rgba(24,70,40,.55));
@@ -291,7 +274,6 @@ body[data-screen="journalScreen"] .tab[data-s="journalScreen"] svg, body[data-sc
 .tierBar i { display: block; height: 100%; background: #ffc94a; border-radius: 4px; transition: width .6s; }
 .tier.locked .tierHead { opacity: .55; filter: grayscale(1); }
 
-/* landmark grows with progress */
 .landmark { position: absolute; left: 50%; top: 52%; z-index: 1; transform: translate(-50%, -50%); cursor: pointer; text-align: center; }
 .landmark img { display: block; max-width: 70vw; filter: drop-shadow(0 10px 18px rgba(0,0,0,.35)); transition: opacity .6s, transform .6s; }
 .tier.s1 .landmark img { opacity: .28; transform: scale(.7); }
@@ -304,31 +286,23 @@ body[data-screen="journalScreen"] .tab[data-s="journalScreen"] svg, body[data-sc
 }
 .tier.locked .landmark { filter: grayscale(1); opacity: .5; pointer-events: none; }
 
-/* trail (dotted fallback) */
 .trail { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
 .trail path { fill: none; stroke: rgba(255,244,224,.55); stroke-width: 2.5; stroke-dasharray: 2 7; stroke-linecap: round; vector-effect: non-scaling-stroke; }
 
-/* illustrated zone maps (optional images) */
 .terrain, .pathArt { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; user-select: none; }
 .terrain { object-fit: cover; z-index: 0; }
 .pathArt { object-fit: fill; z-index: 0; }
 .tier.hasPath .trail { display: none; }
 .tier.locked .terrain, .tier.locked .pathArt { filter: grayscale(.5) brightness(.86); }
-/* .tier.s0 .terrain { opacity: .55; }
-.tier.s1 .terrain, .tier.s2 .terrain { opacity: .8; } */
 .tier.locked .terrain { opacity: .55; }
 
-/* sanctuary life */
 .prop2 { position: absolute; z-index: 1; cursor: pointer; transform: translateX(-50%); }
 .prop2 img { display: block; pointer-events: none; }
 .walker2 img { animation: idle 3.2s ease-in-out infinite; }
 .flyer2 { animation: drift 7s ease-in-out infinite alternate; }
 .prop2.newest { animation: pop .9s cubic-bezier(.2,1.6,.4,1) both; }
 @keyframes idle  { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-/* @keyframes drift { from { transform: translateX(-50%) translateY(0); } to { transform: translateX(-30%) translateY(-10px); } }
-@keyframes pop   { from { transform: translateX(-50%) scale(0); } to { transform: translateX(-50%) scale(1); } } */
 
-/* nodes */
 .node { position: absolute; z-index: 3; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 2px; width: 76px; padding: 0; border: 0; background: none; cursor: pointer; }
 .node .pin { height: 20px; display: flex; align-items: flex-end; font-size: 16px; animation: nodeBob 2.6s ease-in-out infinite; }
 .node .pin img { height: 20px; width: auto; }
@@ -344,14 +318,12 @@ body[data-screen="journalScreen"] .tab[data-s="journalScreen"] svg, body[data-sc
 @keyframes nodeBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 @keyframes nodePulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,201,74,.7), 0 6px 16px rgba(0,0,0,.35); } 50% { box-shadow: 0 0 0 10px rgba(255,201,74,0), 0 6px 16px rgba(0,0,0,.35); } }
 
-/* zone rail */
 .rail { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); z-index: 8; display: flex; flex-direction: column; gap: 9px; padding: 8px 5px; border-radius: 99px; background: rgba(20,12,36,.4); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 .rail i { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid rgba(255,244,224,.6); cursor: pointer; transition: transform .2s, background .2s; }
 .rail i.part { background: rgba(255,201,74,.45); }
 .rail i.full { background: #ffc94a; border-color: #ffc94a; }
 .rail i.on { transform: scale(1.5); border-color: #fff; }
 
-/* calibration mode: let taps reach the zone itself */
 body.calib .node, body.calib .landmark, body.calib .prop2 { pointer-events: none; }
 body.calib .tier { cursor: crosshair; }
 
@@ -359,56 +331,45 @@ body.calib .tier { cursor: crosshair; }
   .node .pin, .node.current .nCard, .walker2 img, .flyer2, .prop2.newest { animation: none; }
 }
 
-/* ===== CLIMB FIXES ===== */
 
-/* 1. Give the scene a real height. Percent heights collapse here, because .hero has no fixed height */
 #home .hero { flex: none; min-height: 0; }
 .hero #scene.climbScene {
   height: clamp(420px, 56vh, 540px); min-height: 420px; max-height: none;
   border-radius: 26px; isolation: isolate;
 }
-#scene.quiet .climb { filter: none; }                 /* #scene.quiet already dims the whole scene */
+#scene.quiet .climb { filter: none; }
 
-/* 2. Nodes are <button>s, so cancel the global chunky-button styling */
 .node {
   min-height: 0; box-shadow: none; border-radius: 0; color: inherit;
   font-family: inherit; transition: none;
 }
 .node:active { transform: translate(-50%, -50%) scale(.95); box-shadow: none; }
 
-/* 3. Inline widths on sprites were stretching these images */
 .tierHead img { height: 34px; width: auto !important;  }
 .node .pin img { height: 20px; width: auto !important; }
 
-/* 4. The old .plot rule adds a top margin */
 .landmark .plot { margin: 0; }
 
-/* 5. The status pill must sit above the scene layers */
 .pill { z-index: 12; pointer-events: none; }
 
-/* 6. Bigger tap area for the rail dots */
 .rail i { position: relative; }
 .rail i::after { content: ""; position: absolute; inset: -8px; }
 
-/* 7. Renamed animations (no clash with the card pop and cloud drift) */
 @keyframes climbDrift { from { transform: translateX(-50%) translateY(0); } to { transform: translateX(-30%) translateY(-10px); } }
 @keyframes climbPop   { from { transform: translateX(-50%) scale(0); } to { transform: translateX(-50%) scale(1); } }
 .flyer2 { animation: climbDrift 7s ease-in-out infinite alternate; }
 .prop2.newest { animation: climbPop .9s cubic-bezier(.2,1.6,.4,1) both; }
 
-/* ===== CONTINUOUS MAP ===== */
 .climb { scroll-snap-type: none; }
 .tier { scroll-snap-align: none; scroll-snap-stop: normal; }
-.tier::before, .tier::after { display: none; }          /* no seams between zones */
-.tierHead, .tierBar, .rail { display: none !important; } /* old headers and rail */
+.tier::before, .tier::after { display: none; }
+.tierHead, .tierBar, .rail { display: none !important; }
 
-/* fade each zone's artwork into its neighbours */
 .terrain, .pathArt {
   -webkit-mask-image: linear-gradient(transparent, #000 14%, #000 86%, transparent);
           mask-image: linear-gradient(transparent, #000 14%, #000 86%, transparent);
 }
 
-/* single zone chip that follows the scroll */
 .zoneHud {
   position: absolute; top: 12px; left: 12px; z-index: 9; pointer-events: none;
   display: grid; grid-template-columns: auto auto auto; align-items: center; gap: 4px 8px;
@@ -422,11 +383,9 @@ body.calib .tier { cursor: crosshair; }
 .zoneHud .zBar { grid-column: 1 / -1; height: 3px; border-radius: 3px; background: rgba(255,255,255,.18); overflow: hidden; }
 .zoneHud .zBar u { display: block; height: 100%; background: var(--gold); transition: width .4s; }
 .zoneHud.done em::after { content: " ✓"; }
-/* road look + compact zones */
 .trail path.roadBed { stroke: rgba(255,244,224,.16); stroke-width: 18; stroke-dasharray: none; }
 .tier { min-height: 0; }
 
-/* ===== REALISM PASS ===== */
 .scenery {
   position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none;
   -webkit-mask-image: linear-gradient(transparent, #000 12%, #000 88%, transparent);
@@ -434,20 +393,17 @@ body.calib .tier { cursor: crosshair; }
 }
 .tier.locked .scenery { filter: grayscale(.8) brightness(.7); }
 
-/* film grain over every zone */
 .tier::before {
   display: block; content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; height: auto;
   background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
   opacity: .12; mix-blend-mode: overlay;
 }
 
-/* depth vignette around the whole scene */
 #scene.climbScene::after {
   content: ""; position: absolute; inset: 0; z-index: 10; pointer-events: none; border-radius: inherit;
   box-shadow: inset 0 0 70px rgba(10,6,20,.55);
 }
 
-/* road: shadow, edge, surface, centre line */
 .trail path { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: none; vector-effect: non-scaling-stroke; }
 .trail .rShade { stroke: rgba(0,0,0,.28); stroke-width: 28px; }
 .trail .rEdge  { stroke: #7a5a3a; stroke-width: 21px; }
@@ -459,7 +415,6 @@ body.calib .tier { cursor: crosshair; }
 .category-space .rEdge { stroke: #3a2a8a; }
 .category-space .rShade { stroke: rgba(122,104,224,.3); }
 .landmark { display: none !important; }
-/* ===== BRIGHTER TILES ===== */
 .node .nCard {
   width: 66px; height: 66px; opacity: 1;
   background-color: #fff4e0; background-size: cover; background-position: center;
@@ -471,17 +426,13 @@ body.calib .tier { cursor: crosshair; }
 .node .nName { background: #1d1530; color: #fff; opacity: 1; font-size: 11px; backdrop-filter: none; -webkit-backdrop-filter: none; }
 .node .pin { filter: drop-shadow(0 2px 3px rgba(0,0,0,.6)); }
 
-/* done: strong gold glow */
 .node.done .nCard { border-color: #ffc94a; box-shadow: 0 0 0 2px rgba(255,201,74,.7), 0 0 22px rgba(255,201,74,1), 0 6px 14px rgba(0,0,0,.5); }
 .node.current .nCard { border-color: #fff3b0; }
 
-/* locked: solid bright purple, not faded */
 .node.locked .nCard { opacity: 0.7; filter: none; background-image: linear-gradient(160deg, #ead87b, #83a03f); border-color: #fff; }
 .node.locked .nCard::after { font-size: 26px; }
 .node.locked .pin, .node.locked .nName { opacity: 1; filter: none; }
 
-/* ===== PER-CATEGORY TILE COLOURS ===== */
-/* --c1 = bright colour (borders, road dashes), --c2 = deep colour (locked card, name label), --glow = glow */
 .category-culture      { --c1:#ff7ac8; --c2:#8a2a9a; --glow:#ff5cbc; }
 .category-history      { --c1:#ffb347; --c2:#b4601a; --glow:#ff9a2a; }
 .category-nature       { --c1:#6af09a; --c2:#1f7a45; --glow:#3fe07a; }
@@ -492,7 +443,6 @@ body.calib .tier { cursor: crosshair; }
 .category-food         { --c1:#ffd83a; --c2:#c98a00; --glow:#ffc800; }
 .category-architecture { --c1:#d6def5; --c2:#566a96; --glow:#b8c6ee; }
 
-/* tile border and glow follow the zone */
 .tier .node .nCard { border-color: var(--c1); }
 .tier .node.done .nCard {
   border-color: var(--c1);
@@ -508,23 +458,19 @@ body.calib .tier { cursor: crosshair; }
   50%     { box-shadow: 0 0 0 4px var(--c1), 0 0 30px var(--glow), 0 6px 14px rgba(0,0,0,.5); }
 }
 
-/* locked tiles: each zone gets its own colour, not one shared purple */
 .tier .node.locked .nCard {
   background-image: linear-gradient(160deg, var(--c1), var(--c2));
   border-color: var(--c1);
 }
 
-/* name label in the zone colour */
 .tier .node .nName {
   background: var(--c2); color: #fff;
   border: 1px solid var(--c1);
 }
 
-/* the road dashes take the zone colour too */
 .tier .trail .rLine { stroke: var(--c1); }
 .tier .trail { filter: drop-shadow(0 0 5px var(--glow)); }
 
-/* ===== STOP SHEET ===== */
 #sheet { position: fixed; inset: 0; z-index: 10; display: flex; align-items: flex-end; justify-content: center; background: rgba(10,6,20,.6); animation: fade .25s; }
 .sheetBox {
   position: relative; width: min(100vw, 480px); padding: 12px 20px calc(22px + env(safe-area-inset-bottom));
@@ -548,13 +494,11 @@ body.calib .tier { cursor: crosshair; }
 
 #playSub { display: none; }
 
-/* first tile of each zone: picture visible even before the zone is reached */
 .tier .node.locked.preview .nCard { opacity: 1; }
 .tier .node.locked.preview .nCard::after { content: none; }
 #cardReward:empty { display: none; }
 #puzzleHint:empty { display: none; }
 
-/* ===== EXPLORE TILES: 3D LOOK ===== */
 #exList { gap: 14px; padding-bottom: 14px; perspective: 800px; }
 
 .exCard {
@@ -563,7 +507,6 @@ body.calib .tier { cursor: crosshair; }
   outline: 0;
   transform: rotateX(4deg);
   transform-origin: 50% 100%;
-  /* thick solid edge underneath, then a soft drop shadow, then a bright top bevel */
   box-shadow:
     inset 0 2px 0 rgba(255,255,255,.35),
     inset 0 -3px 6px rgba(0,0,0,.35),
@@ -573,14 +516,12 @@ body.calib .tier { cursor: crosshair; }
   transition: transform .12s, box-shadow .12s;
 }
 
-/* glossy highlight across the top of the tile */
 .exCard::before {
   content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
   border-radius: inherit;
   background: linear-gradient(160deg, rgba(255,255,255,.28) 0%, rgba(255,255,255,.06) 28%, rgba(255,255,255,0) 45%);
 }
 
-/* pressed: the block sinks down into its edge */
 .exCard:active {
   transform: translateY(5px) rotateX(0deg);
   box-shadow:
@@ -595,7 +536,6 @@ body.calib .tier { cursor: crosshair; }
   .exCard:hover { transform: translateY(-3px) rotateX(2deg); }
 }
 
-/* ===== EXPLORE TILES: COLOURED GLOW ONLY ===== */
 .exCard[data-cat="culture"]      { --cc:#ff7ac8; }
 .exCard[data-cat="history"]      { --cc:#ffb347; }
 .exCard[data-cat="nature"]       { --cc:#6af09a; }
@@ -606,7 +546,6 @@ body.calib .tier { cursor: crosshair; }
 .exCard[data-cat="food"]         { --cc:#ffd83a; }
 .exCard[data-cat="architecture"] { --cc:#d6def5; }
 
-/* more room between tiles so glows never touch */
 #exList { gap: 20px; padding: 6px 6px 18px; }
 
 .exCard {
@@ -620,28 +559,23 @@ body.calib .tier { cursor: crosshair; }
   box-shadow: 0 0 0 1px rgba(0,0,0,.45), 0 0 6px var(--cc);
 }
 
-/* remove the striped bar under the top buttons */
 .hud::after { display: none; }
 .hud { padding-bottom: 0; }
-/* remove the week row */
 #weekRow { display: none; }
 
-/* ===== HOME: FULL-SCREEN MAP ===== */
 #home {
   position: fixed; inset: 0; display: block;
   padding: 0; gap: 0; overflow: hidden;
 }
 
-/* map fills the whole screen */
 #home .hero { position: absolute; inset: 0; width: 100%; }
 #home .hero #scene.climbScene {
   width: 100%; height: 100%; min-height: 0; max-height: none;
   border-radius: 0; border: 0; box-shadow: none;
-  background: #8a3a6e;               /* same colour as the first (bottom) zone */
+  background: #8a3a6e;
 }
-#home .climb { padding-bottom: 160px; } /* lets the first stops scroll clear of the Play button and tab bar */
+#home .climb { padding-bottom: 160px; }
 
-/* top bar floats over the map */
 #home .hud {
   position: absolute; top: 0; left: 0; right: 0; z-index: 20;
   width: 100%; padding: calc(12px + env(safe-area-inset-top)) 14px 28px;
@@ -650,12 +584,10 @@ body.calib .tier { cursor: crosshair; }
 }
 #home .hud > * { pointer-events: auto; }
 
-/* status pill sits just under the top bar */
 #home .pill {
   top: calc(64px + env(safe-area-inset-top)); bottom: auto; z-index: 20;
 }
 
-/* Play button floats above the tab bar */
 #home .playBlock {
   position: absolute; left: 0; right: 0; z-index: 15;
   bottom: calc(84px + env(safe-area-inset-bottom));
@@ -663,13 +595,10 @@ body.calib .tier { cursor: crosshair; }
 }
 #home .playBlock button { pointer-events: auto; }
 
-/* week row is not needed on a full-screen map */
 #weekRow { display: none; }
 
-/* remove the pins above the map tiles */
 .node .pin { display: none; }
 
-/* ===== STATUS PILL: POLISHED ===== */
 #statePill {
   display: flex; align-items: center; gap: 9px;
   padding: 9px 18px 9px 14px; border-radius: 99px;
@@ -685,7 +614,6 @@ body.calib .tier { cursor: crosshair; }
   animation: pillIn .45s var(--ease) both;
 }
 
-/* glowing gold dot before the text */
 #statePill::before {
   content: ""; flex: none; width: 9px; height: 9px; border-radius: 50%;
   background: radial-gradient(circle at 35% 35%, #fff3b0, #ffc94a 60%, #e8963d);
@@ -694,7 +622,6 @@ body.calib .tier { cursor: crosshair; }
 
 @keyframes pillIn { from { opacity: 0; translate: 0 -10px; } }
 
-/* ===== LOGO: POLISHED ===== */
 .logo {
   display: flex; flex-direction: column; align-items: flex-start;
   font: 700 1.75rem/1 "Fredoka", "Nunito", sans-serif;
@@ -712,16 +639,13 @@ body.calib .tier { cursor: crosshair; }
   -webkit-text-fill-color: #fff4e0; color: #fff4e0;
 }
 
-/* thin gold lines either side of "Sanctuary" */
 .logo span::before, .logo span::after {
   content: ""; height: 1.5px; width: 14px; border-radius: 2px;
   background: linear-gradient(90deg, rgba(255,201,74,0), #ffc94a);
 }
 .logo span::after { transform: scaleX(-1); }
 
-/* ===== EXPLORE CONTROLS: GAME STYLE (text only) ===== */
 
-/* size selector: separate chunky buttons, no dark trough */
 .seg { background: none; padding: 0; gap: 8px; box-shadow: none; }
 .segBtn {
   display: inline-block;
@@ -735,8 +659,7 @@ body.calib .tier { cursor: crosshair; }
 .segBtn.on { background: var(--gold); color: var(--ink); box-shadow: 0 4px 0 var(--gold-d); }
 .segBtn.on:active { box-shadow: 0 1px 0 var(--gold-d); }
 
-/* pack tabs: chunky pills */
-.packTabs { gap: 9px; padding: 4px 16px 8px; }   /* bottom padding keeps the lip from being clipped */
+.packTabs { gap: 9px; padding: 4px 16px 8px; }
 .packTab {
   --pc: #ffc94a;
   display: inline-block;
@@ -759,20 +682,17 @@ body.calib .tier { cursor: crosshair; }
 .packTab[data-id="architecture"] { --pc: #d6def5; --pd: #566a96; }
 .packTab[data-id="all"]          { --pd: #c98a00; }
 
-/* selected tab fills with its category colour */
 .packTab.on { background: var(--pc); color: var(--ink); box-shadow: 0 4px 0 var(--pd, #c98a00); }
 .packTab.on:active { box-shadow: 0 1px 0 var(--pd, #c98a00); }
 
-/* ===== RACE: LAYOUT POLISH ===== */
 
-/* ---------- shared: inputs and dropdowns ---------- */
 section#raceMenu input, section#raceLobby select {
   width: 100%; max-width: none; height: 54px; padding: 0 16px;
   border-radius: 16px; border: 2px solid rgba(255,255,255,.14);
   background: #120c20; color: var(--cream);
   font: 600 1rem "Fredoka", "Nunito", sans-serif; text-align: center;
   box-shadow: inset 0 3px 8px rgba(0,0,0,.5); outline: 0;
-  -webkit-user-select: text; user-select: text;      /* lets you type on iPhone */
+  -webkit-user-select: text; user-select: text;
   transition: border-color .15s, box-shadow .15s;
 }
 section#raceMenu input:focus, section#raceLobby select:focus {
@@ -780,7 +700,6 @@ section#raceMenu input:focus, section#raceLobby select:focus {
 }
 section#raceMenu input::placeholder { color: rgba(255,244,224,.4); }
 
-/* ---------- menu ---------- */
 section#raceMenu { justify-content: flex-start; gap: 14px; padding-top: calc(40px + env(safe-area-inset-top)); }
 section#raceMenu > * { width: min(100%, 360px); }
 section#raceMenu h2 { font-size: 2rem; line-height: 1.05; text-shadow: 0 3px 0 rgba(0,0,0,.35); }
@@ -789,7 +708,6 @@ section#raceMenu button { width: 100%; }
 section#raceMenu #raceCreate { min-height: 60px; font-size: 1.2rem; }
 section#raceMenu #raceMsg { color: #ffb08a; }
 
-/* "or join a friend" with lines either side */
 section#raceMenu p:nth-of-type(2) {
   display: flex; align-items: center; gap: 12px; margin-top: 6px;
   font-size: .75rem; letter-spacing: .15em; text-transform: uppercase; opacity: .7;
@@ -798,18 +716,15 @@ section#raceMenu p:nth-of-type(2)::before, section#raceMenu p:nth-of-type(2)::af
   content: ""; flex: 1; height: 1px; background: rgba(255,255,255,.22);
 }
 
-/* join row: code box + button side by side */
 section#raceMenu .row { flex-wrap: nowrap; gap: 10px; }
 section#raceMenu .row input { flex: 1; min-width: 0; }
 section#raceMenu .row button { width: auto; flex: none; height: 54px; padding: 0 24px; }
 section#raceMenu #raceCode { font-size: 1.3rem; letter-spacing: .35em; padding-left: calc(16px + .35em); }
 
-/* ---------- lobby ---------- */
 section#raceLobby { justify-content: flex-start; gap: 14px; padding-top: calc(32px + env(safe-area-inset-top)); }
 section#raceLobby > * { width: min(100%, 360px); }
 section#raceLobby button { width: 100%; }
 
-/* room code as a big dashed ticket */
 section#raceLobby h2 {
   display: flex; flex-direction: column; align-items: center; gap: 10px;
   font-size: .8rem; letter-spacing: .3em; text-transform: uppercase; color: var(--cream); opacity: .85;
@@ -821,7 +736,6 @@ section#raceLobby #roomCode {
   text-shadow: 0 0 18px rgba(255,201,74,.45);
 }
 
-/* size + puzzle dropdowns side by side */
 section#raceLobby .row { flex-wrap: nowrap; gap: 10px; }
 section#raceLobby select {
   flex: 1; min-width: 0; font-size: .85rem; padding: 0 30px 0 12px; text-align-last: center;
@@ -833,7 +747,6 @@ section#raceLobby select {
 }
 section#raceLobby select:disabled { opacity: .6; }
 
-/* players as cards */
 section#raceLobby #playerList { gap: 10px; }
 section#raceLobby #playerList li {
   display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-radius: 16px;
@@ -843,11 +756,9 @@ section#raceLobby #playerList li {
 }
 @keyframes raceIn { from { opacity: 0; transform: translateY(10px) scale(.97); } }
 
-/* start + leave stacked full width */
 section#raceLobby .row:last-child { flex-direction: column; }
 section#raceLobby #raceStart { min-height: 60px; font-size: 1.2rem; }
 
-/* ---------- live race bars ---------- */
 #raceBars:empty { display: none; }
 #raceBars {
   width: min(92vw, 420px); padding: 12px 14px; gap: 10px;
@@ -859,7 +770,6 @@ section#raceLobby #raceStart { min-height: 60px; font-size: 1.2rem; }
 #raceBars .track { height: 12px; border-radius: 99px; background: #120c20; box-shadow: inset 0 2px 4px rgba(0,0,0,.6); }
 #raceBars .track i { border-radius: 99px; background: linear-gradient(90deg, #ffc94a, #ffe27a); box-shadow: 0 0 10px rgba(255,201,74,.6); }
 
-/* ---------- countdown ---------- */
 #boardWrap #raceCount {
   border-radius: 24px;
   background: radial-gradient(circle at 50% 40%, rgba(60,45,102,.97), rgba(18,12,32,.98));
@@ -869,7 +779,6 @@ section#raceLobby #raceStart { min-height: 60px; font-size: 1.2rem; }
 }
 @keyframes raceTick { from { transform: scale(1.5); opacity: 0; } 30% { opacity: 1; } to { transform: scale(1); } }
 
-/* ---------- results ---------- */
 body #raceResult { background: rgba(10,6,20,.82); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 #raceResult h2 { font-size: 1.8rem; text-shadow: 0 2px 0 rgba(0,0,0,.4); }
 #rrList { display: flex; flex-direction: column; margin: 4px 0; }
@@ -882,10 +791,8 @@ body #raceResult { background: rgba(10,6,20,.82); backdrop-filter: blur(6px); -w
 #raceResult .row { flex-wrap: nowrap; }
 #raceResult .row button { flex: 1; }
 
-/* ===== JOURNAL: POLISHED ===== */
 #journalScreen { justify-content: flex-start; gap: 20px; padding-top: 0; }
 
-/* sticky header with overall progress */
 .jHead {
   position: sticky; top: 0; z-index: 5; align-self: stretch; margin: 0 -16px;
   padding: calc(16px + env(safe-area-inset-top)) 20px 16px; text-align: left;
@@ -898,7 +805,6 @@ body #raceResult { background: rgba(10,6,20,.82); backdrop-filter: blur(6px); -w
 .jBar i { display: block; height: 100%; width: 0; border-radius: 99px; transition: width .6s;
   background: linear-gradient(90deg, #ffc94a, #ffe27a); box-shadow: 0 0 10px rgba(255,201,74,.6); }
 
-/* category sections */
 #journalGrid { display: flex; flex-direction: column; gap: 24px; width: min(94vw, 480px); }
 .jSec { --cc: #ffc94a; text-align: left; }
 .jSec[data-cat="culture"]      { --cc: #ff7ac8; }
@@ -919,7 +825,6 @@ body #raceResult { background: rgba(10,6,20,.82); backdrop-filter: blur(6px); -w
   border: 1.5px solid var(--cc); color: var(--cc); font: 700 .72rem "Nunito", sans-serif; }
 .jSec.full .jCnt { background: var(--cc); color: var(--ink); }
 
-/* tiles */
 .jRow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; padding: 4px; }
 @media (min-width: 700px) { #journalGrid { width: min(94vw, 760px); } .jRow { grid-template-columns: repeat(4, 1fr); } }
 
@@ -940,14 +845,12 @@ body #raceResult { background: rgba(10,6,20,.82); backdrop-filter: blur(6px); -w
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 
-/* not yet restored */
 .jItem.locked {
   background: #120c20; border: 2px dashed rgba(255,255,255,.2); box-shadow: inset 0 3px 8px rgba(0,0,0,.5);
   color: rgba(255,255,255,.28); font: 700 1.5rem "Fredoka", sans-serif; opacity: 1; cursor: default;
 }
 .jItem.locked::after { display: none; }
 .jItem.locked:active { transform: none; }
-/* ===== TAB BAR: GAME BUTTONS ===== */
 #tabbar {
   gap: 10px; align-items: flex-end; justify-content: center;
   padding: 10px 12px calc(14px + env(safe-area-inset-bottom));
@@ -957,7 +860,6 @@ body #raceResult { background: rgba(10,6,20,.82); backdrop-filter: blur(6px); -w
   box-shadow: 0 -6px 20px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.07);
 }
 
-/* each tab = a raised key */
 .tab {
   position: relative; flex: 1; max-width: 96px; min-width: 0;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
@@ -972,7 +874,6 @@ body #raceResult { background: rgba(10,6,20,.82); backdrop-filter: blur(6px); -w
   transition: transform .08s, box-shadow .08s, background .15s, color .15s;
 }
 
-/* glossy highlight on the top half */
 .tab::after {
   content: ""; position: absolute; left: 4px; right: 4px; top: 3px; height: 42%;
   border-radius: 12px 12px 20px 20px; pointer-events: none;
@@ -981,13 +882,11 @@ body #raceResult { background: rgba(10,6,20,.82); backdrop-filter: blur(6px); -w
 .tab::before { content: none; }
 .tab svg { width: 24px; height: 24px; transition: transform .2s var(--ease); filter: drop-shadow(0 2px 0 rgba(0,0,0,.35)); }
 
-/* press: key sinks onto its lip */
 .tab:active {
   transform: translateY(4px);
   box-shadow: 0 1px 0 #1a1230, 0 2px 4px rgba(0,0,0,.4), inset 0 2px 0 rgba(255,255,255,.18);
 }
 
-/* active tab: solid gold key */
 body[data-screen="home"] .tab[data-s="home"],
 body[data-screen="exploreScreen"] .tab[data-s="exploreScreen"],
 body[data-screen="journalScreen"] .tab[data-s="journalScreen"],
@@ -1011,30 +910,23 @@ body[data-screen="journalScreen"] .tab[data-s="journalScreen"] svg,
 body[data-screen="raceMenu"] .tab[data-s="raceMenu"] svg {
   transform: scale(1.12); filter: drop-shadow(0 2px 0 rgba(255,255,255,.35));
 }
-/* solid tab icons */
 .tab svg { width: 27px; height: 27px; }
 
-/* ===== KEEP CONTENT ABOVE THE TAB BAR ===== */
 #home .playBlock { bottom: calc(var(--tabH, 96px) + 14px); }
-#home .climb     { padding-bottom: calc(var(--tabH, 96px) + 110px); }   /* first map stops can scroll clear of Play */
+#home .climb     { padding-bottom: calc(var(--tabH, 96px) + 110px); }
 #installBar      { bottom: calc(var(--tabH, 96px) + 96px); }
 #toast           { bottom: calc(var(--tabH, 96px) + 12px); }
-/* ===== NO BARS: KEYS AND PLAY BUTTON FLOAT OVER THE MAP ===== */
 
-/* tab bar: remove the bar, keep only the keys */
 #tabbar {
   background: none; border: 0; border-radius: 0; box-shadow: none;
   backdrop-filter: none; -webkit-backdrop-filter: none;
-  pointer-events: none;                 /* taps in the gaps go through to the map */
+  pointer-events: none;
 }
 #tabbar .tab { pointer-events: auto; }
 
-/* map is full height again */
 #home .hero { bottom: 0; }
-/* extra scroll room so the first stops can be scrolled up above the Play button and keys */
 #home .climb { padding-bottom: calc(var(--tabH, 96px) + 110px); }
 
-/* Play button: no strip behind it */
 #home .playBlock {
   bottom: calc(var(--tabH, 96px) + 14px); height: auto;
   display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
@@ -1047,7 +939,6 @@ body:not([data-screen="home"]) #tabbar::before {
   content: ""; position: absolute; inset: -30px 0 0; z-index: -1; pointer-events: none;
   background: linear-gradient(to top, rgba(29,21,48,.95) 40%, rgba(29,21,48,0));
 }
-/* ===== TAB BAR HEIGHT IS FIXED, PLAY SITS ABOVE IT ===== */
 :root { --tabH: calc(92px + env(safe-area-inset-bottom)); }
 
 #tabbar {
@@ -1060,11 +951,10 @@ body:not([data-screen="home"]) #tabbar::before {
   position: absolute; left: 0; right: 0; z-index: 15;
   bottom: calc(var(--tabH) + 16px);
 }
-#home .climb  { padding-bottom: calc(var(--tabH) + 120px); }   /* map can scroll clear of Play and the keys */
+#home .climb  { padding-bottom: calc(var(--tabH) + 120px); }
 #installBar   { bottom: calc(var(--tabH) + 100px); }
 #toast        { bottom: calc(var(--tabH) + 12px); }
 
-/* ===== PLAY BUTTON SITS ABOVE THE TAB KEYS ===== */
 #home .playBlock {
   position: absolute !important; left: 0; right: 0;
   bottom: calc(108px + env(safe-area-inset-bottom)) !important;
@@ -1074,6 +964,5 @@ body:not([data-screen="home"]) #tabbar::before {
 }
 #home .playBlock button { pointer-events: auto; }
 
-/* extra scroll room so the first stops can move up above the Play button */
 #home .climb { padding-bottom: calc(220px + env(safe-area-inset-bottom)) !important; }
 #installBar  { bottom: calc(190px + env(safe-area-inset-bottom)) !important; }

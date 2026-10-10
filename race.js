@@ -1,4 +1,3 @@
-// ===== RACE A FRIEND (peer-to-peer using PeerJS) =====
 window.raceActive = false;
 (function () {
   const $ = id => document.getElementById(id);
@@ -7,18 +6,6 @@ window.raceActive = false;
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const fmt = ms => { const s = ms / 1000; return s < 60 ? s.toFixed(1) + "s" : Math.floor(s / 60) + "m " + Math.round(s % 60) + "s"; };
-//   const newCode = () => Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join("");
-//   const PEER_OPTS = {
-//   config: {
-//     iceServers: [
-//       { urls: "stun:stun.l.google.com:19302" },
-//       { urls: "stun:stun1.l.google.com:19302" },
-//       // paste your TURN provider's details here (replace the YOUR-... parts)
-//       { urls: "turn:YOUR-TURN-HOST:80", username: "YOUR-USERNAME", credential: "YOUR-PASSWORD" },
-//       { urls: "turn:YOUR-TURN-HOST:443?transport=tcp", username: "YOUR-USERNAME", credential: "YOUR-PASSWORD" }
-//     ].filter(s => !String(s.urls).includes("YOUR-"))   // ignored until you fill them in
-//   }
-// };
 const newCode = () => Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join("");
   const TURN_USER = "7745475dcaa24b88b817ea35", TURN_PASS = "T4tnjFZnubzquwcD";
 const PEER_OPTS = {
@@ -34,12 +21,10 @@ const PEER_OPTS = {
   }
 };
 
-  /* ---------- state ---------- */
   let peer = null, conns = [], hostConn = null, isHost = false, joined = false;
   let myId = "", room = "", players = {}, winner = null, phase = "lobby";
   let cfg = { size: 3, pidx: -1 }, t0 = 0, finished = false, myMs = null, roundId = 0;
 
-  /* ---------- styles ---------- */
   document.head.insertAdjacentHTML("beforeend", `<style>
     .rbar{display:grid;grid-template-columns:96px 1fr 58px;gap:8px;align-items:center;font-size:.85rem;width:min(92vw,420px);text-align:left}
     #raceBars{display:flex;flex-direction:column;gap:6px}
@@ -53,7 +38,6 @@ const PEER_OPTS = {
     #playerList{list-style:none;padding:0;margin:0;font-size:1.1rem;display:flex;flex-direction:column;gap:6px}
   </style>`);
 
-  /* ---------- screens ---------- */
   const puzzleOptions = PUZZLES.map((p, i) => `<option value="${i}">${esc(p.name)}</option>`).join("");
   document.body.insertAdjacentHTML("beforeend", `
   <section id="raceMenu" class="screen hidden">
@@ -96,23 +80,6 @@ const PEER_OPTS = {
     return n;
   };
 
-  /* ---------- connection: HOST ---------- */
-  // function createRoom() {
-  //   if (typeof Peer === "undefined") return say("Racing needs an internet connection.");
-  //   cleanup(); isHost = true; myId = "host"; room = newCode();
-  //   const name = getName(); say("Creating room…");
-  //   peer = new Peer("sankofa-" + room);
-  //   peer.on("open", () => {
-  //     players = { host: { name, n: 0, ms: null } };
-  //     phase = "lobby"; winner = null; cfg = { size: +$("optSize").value, pidx: -1 };
-  //     openLobby();
-  //   });
-  //   peer.on("connection", onGuest);
-  //   peer.on("error", e => {
-  //     if (e.type === "unavailable-id") createRoom();
-  //     else say("Couldn't reach the matchmaking server. Check your internet.");
-  //   });
-  // }
   function createRoom() {
   if (typeof Peer === "undefined") return say("Racing needs an internet connection.");
   cleanup(); isHost = true; myId = "host"; room = newCode();
@@ -172,23 +139,6 @@ const PEER_OPTS = {
     winner = null; phase = "lobby"; endRaceUI(); openLobby(); hostBroadcast();
   }
 
-  /* ---------- connection: GUEST ---------- */
-  // function joinRoom() {
-  //   const code = $("raceCode").value.trim().toUpperCase();
-  //   if (typeof Peer === "undefined") return say("Racing needs an internet connection.");
-  //   if (code.length < 4) return say("Enter your friend's room code.");
-  //   cleanup(); isHost = false; room = code;
-  //   const name = getName(); say("Connecting…");
-  //   peer = new Peer();
-  //   peer.on("open", id => {
-  //     myId = id;
-  //     hostConn = peer.connect("sankofa-" + room, { reliable: true });
-  //     hostConn.on("open", () => hostConn.send({ t: "join", name }));
-  //     hostConn.on("data", guestData);
-  //     hostConn.on("close", () => { if (room) { leave(true); say("The host left the room."); } });
-  //   });
-  //   peer.on("error", e => say(e.type === "peer-unavailable" ? "Room not found. Check the code." : "Couldn't connect. Check your internet."));
-  // }
   function joinRoom() {
   const code = $("raceCode").value.trim().toUpperCase();
   if (typeof Peer === "undefined") return say("Racing needs an internet connection.");
@@ -202,7 +152,7 @@ const PEER_OPTS = {
   peer.on("open", id => {
     clearTimeout(t); myId = id;
     hostConn = peer.connect("sankofa-" + room, { reliable: true });
-    t = setTimeout(() => {                       // never got a reply from the host
+    t = setTimeout(() => {
       if (!joined) { leave(true); say("Couldn't connect to your friend. Check the code and try again."); }
     }, 15000);
     hostConn.on("open", () => hostConn.send({ t: "join", name }));
@@ -228,14 +178,13 @@ const PEER_OPTS = {
     } else if (m.t === "start") { beginRound(m); }
   }
 
-  /* ---------- the race itself ---------- */
   async function beginRound(m) {
     const my = ++roundId;
     exploreMode = false; phase = "race"; window.raceActive = true; finished = false; myMs = null; winner = null;
     puzzle = PUZZLES[m.pidx];
     if (!puzzle.sq) puzzle.sq = await squareImage(puzzle.image);
     SIZE = m.size; TOTAL = SIZE * SIZE; twist = "Classic"; counter = 99;
-    order = m.order.slice(); lastMove = null; solved = true;     // locked until GO
+    order = m.order.slice(); lastMove = null; solved = true;
     board.className = "";
     board.style.gridTemplateColumns = board.style.gridTemplateRows = `repeat(${SIZE}, 1fr)`;
     setupMemory(false);
@@ -247,7 +196,6 @@ const PEER_OPTS = {
     const cd = $("raceCount"); cd.classList.remove("hidden");
     for (const s of ["3", "2", "1", "GO!"]) {
       if (my !== roundId || !window.raceActive) return;
-      // cd.textContent = s; sfx.tap(); await sleep(s === "GO!" ? 500 : 1000);
       cd.textContent = s; cd.style.animation = "none"; void cd.offsetWidth; cd.style.animation = "";
 sfx.tap(); await sleep(s === "GO!" ? 500 : 1000);
     }
@@ -261,7 +209,6 @@ sfx.tap(); await sleep(s === "GO!" ? 500 : 1000);
       hostBroadcast();
     } else if (hostConn && hostConn.open) { hostConn.send(m); }
   }
-  // called by game.js after every tile slide while racing
   window.raceMove = function () {
     const n = order.filter((v, i) => v === i && v !== TOTAL - 1).length;
     report({ t: "prog", n });
@@ -275,7 +222,6 @@ sfx.tap(); await sleep(s === "GO!" ? 500 : 1000);
     }
   };
 
-  /* ---------- drawing ---------- */
   const rank = (a, b) => {
     const A = a[1], B = b[1];
     if (A.ms != null && B.ms != null) return A.ms - B.ms;
@@ -327,7 +273,6 @@ sfx.tap(); await sleep(s === "GO!" ? 500 : 1000);
     if (toMenu) { say(""); showScreen("raceMenu"); }
   }
 
-  /* ---------- buttons ---------- */
   $("tabRace").onclick = () => { say(""); showScreen("raceMenu"); };
   $("raceMenuBack").onclick = () => { refreshHome(); showScreen("home"); };
   $("raceCreate").onclick = createRoom;
@@ -349,7 +294,6 @@ sfx.tap(); await sleep(s === "GO!" ? 500 : 1000);
   const oldBack = $("backBtn").onclick;
   $("backBtn").onclick = () => { if (window.raceActive) leave(false); oldBack(); };
 
-  // invite links like ?room=ABCDE open the join screen
   const q = new URLSearchParams(location.search).get("room");
   if (q) { $("raceCode").value = q.toUpperCase(); showScreen("raceMenu"); }
 })();
