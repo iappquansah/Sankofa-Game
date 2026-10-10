@@ -120,6 +120,18 @@ function fitTabbar() {
 }
 window.addEventListener("resize", fitTabbar);
 window.addEventListener("load", fitTabbar);
+
+// puts the Play button just above the tab keys, whatever the phone's screen
+function placePlay() {
+  const pb = document.querySelector("#home .playBlock"), tb = $("tabbar"), home = $("home");
+  if (!pb || !tb || !home || !tb.offsetHeight) return;
+  const fromBottom = home.getBoundingClientRect().bottom - tb.getBoundingClientRect().top + 14;
+  pb.style.setProperty("bottom", fromBottom + "px", "important");
+  const climb = document.querySelector("#home .climb");
+  if (climb) climb.style.setProperty("padding-bottom", (fromBottom + pb.offsetHeight + 24) + "px", "important");
+}
+window.addEventListener("resize", placePlay);
+window.addEventListener("load", () => { placePlay(); setTimeout(placePlay, 300); });
 /* ---------- SCREENS ---------- */
 function showScreen(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.add("hidden"));
@@ -129,7 +141,7 @@ function showScreen(id) {
   window.scrollTo(0, 0);
   if (id === "home") applyScroll();
   fitTabbar();
-}
+placePlay();}
 let toastTimer;
 function toast(msg) {
   const t = $("toast"); t.textContent = msg; t.classList.remove("hidden");
@@ -654,6 +666,7 @@ function refreshHome() {
   renderWeek();
   renderSanctuary(broken && !!save.lastPlayed && !done);
   $("dbgInfo").textContent = `date: ${todayStr()} · leaves: ${save.restLeaves}`;
+  placePlay();
   updateMuteLabel();
 }
 
