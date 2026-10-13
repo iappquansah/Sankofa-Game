@@ -68,36 +68,90 @@ function missedDays() {
   return Math.max(0, daysBetween(save.lastPlayed, todayStr()) - 1);
 }
 
-let audioCtx;
-function tone(freq, dur, vol = 0.15, delay = 0) {
+/* ---------- AUDIO: soft kalimba-style plucks, reverb and a gentle generative loop ---------- */
+let actx, master, verb, sfxBus, musicBus = null;
+function mkBus(vol) { const b = actx.createGain(); b.gain.value = vol; b.connect(master); b.connect(verb); return b; }
+function audio() {
+  if (actx) return actx;
+  actx = new (window.AudioContext || window.webkitAudioContext)();
+  master = actx.createGain(); master.gain.value = 0.9;
+  const comp = actx.createDynamicsCompressor();
+  master.connect(comp); comp.connect(actx.destination);
+  verb = actx.createConvolver();                         // small generated reverb, no file needed
+  const len = Math.floor(actx.sampleRate * 1.8), buf = actx.createBuffer(2, len, actx.sampleRate);
+  for (let ch = 0; ch < 2; ch++) { const d = buf.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3); }
+  verb.buffer = buf;
+  const wet = actx.createGain(); wet.gain.value = 0.28; verb.connect(wet); wet.connect(master);
+  sfxBus = mkBus(1);
+  return actx;
+}
+function pluck(freq, vol = 0.12, delay = 0, decay = 0.9, out) {
   if (save.muted) return;
   try {
-    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-    const t = audioCtx.currentTime + delay;
-    o.frequency.value = freq;
-    g.gain.setValueAtTime(vol, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    o.connect(g); g.connect(audioCtx.destination);
-    o.start(t); o.stop(t + dur);
+    const c = audio(); if (c.state === "suspended") c.resume();
+    const t = c.currentTime + delay, g = c.createGain(), f = c.createBiquadFilter();
+    const o1 = c.createOscillator(), o2 = c.createOscillator(), g2 = c.createGain();
+    o1.type = "sine"; o1.frequency.value = freq;
+    o2.type = "sine"; o2.frequency.value = freq * 4; g2.gain.value = 0.12;   // bright "tine" overtone
+    f.type = "lowpass"; f.frequency.value = 3200;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.006);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+    o1.connect(g); o2.connect(g2); g2.connect(g); g.connect(f); f.connect(out || sfxBus);
+    o1.start(t); o2.start(t); o1.stop(t + decay + 0.1); o2.stop(t + decay + 0.1);
   } catch (e) {}
 }
+// old calls like tone(520, 0.12, 0.08) keep working
+const tone = (freq, dur, vol = 0.15, delay = 0) => pluck(freq, vol * 1.5, delay, Math.max(0.25, Math.min(dur * 1.2, 1.2)));
 const sfx = {
-  tap: () => tone(520, 0.12),
-  swap: () => { tone(392, 0.15); tone(523, 0.15, 0.12, 0.08); },
-  win: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.7, 0.15, i * 0.16))
+  tap:  () => pluck(330, 0.10, 0, 0.18),
+  swap: () => { pluck(392, 0.12, 0, 0.35); pluck(587.33, 0.09, 0.07, 0.45); },
+  win:  () => [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => pluck(f, 0.13, i * 0.14, 1.4))
 };
-const PENTA = [261.6, 293.7, 329.6, 392, 440, 523.3, 587.3];
-let musicTimer = null;
+
+const SCALE = [261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 587.33, 659.25];      // C pentatonic
+const CHORDS = [[130.81, 196, 293.66], [110, 164.81, 261.63], [98, 146.83, 220], [130.81, 196, 329.63]];
+let musicTimer = null, padTimer = null, chordN = 0;
 function startAmbient() {
   if (save.muted || musicTimer) return;
-  const play = () => {
-    tone(PENTA[Math.floor(Math.random() * PENTA.length)] / (Math.random() < 0.3 ? 2 : 1), 2.6, 0.05);
-    musicTimer = setTimeout(play, 1200 + Math.random() * 2200);
+  try { audio(); if (actx.state === "suspended") actx.resume(); } catch (e) { return; }
+  musicBus = mkBus(0); musicBus.gain.setTargetAtTime(0.9, actx.currentTime, 0.8);
+  const pad = () => {                                   // slow soft chords underneath
+    if (!musicBus) return;
+    const t = actx.currentTime, chord = CHORDS[chordN++ % CHORDS.length];
+    chord.forEach(f => [f, f * 1.004].forEach(ff => {
+      const o = actx.createOscillator(), g = actx.createGain(), lp = actx.createBiquadFilter();
+      o.type = "sine"; o.frequency.value = ff; lp.type = "lowpass"; lp.frequency.value = 800;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(0.018, t + 3);
+      g.gain.linearRampToValueAtTime(0.0001, t + 9.5);
+      o.connect(g); g.connect(lp); lp.connect(musicBus); o.start(t); o.stop(t + 9.6);
+    }));
+    padTimer = setTimeout(pad, 8000);
   };
-  play();
+  const play = () => {                                  // loose, unhurried plucks on top
+    if (!musicBus) return;
+    if (Math.random() < 0.75) {
+      pluck(SCALE[Math.floor(Math.random() * SCALE.length)], 0.045, 0, 1.6, musicBus);
+      if (Math.random() < 0.25) pluck(SCALE[Math.floor(Math.random() * SCALE.length)], 0.03, 0.35, 1.4, musicBus);
+    }
+    musicTimer = setTimeout(play, 1400 + Math.random() * 2400);
+  };
+  pad(); play();
 }
-function stopAmbient() { clearTimeout(musicTimer); musicTimer = null; }
+function stopAmbient() {
+  clearTimeout(musicTimer); clearTimeout(padTimer); musicTimer = padTimer = null;
+  if (musicBus) {
+    const b = musicBus; musicBus = null;
+    try { b.gain.setTargetAtTime(0, actx.currentTime, 0.2); } catch (e) {}
+    setTimeout(() => { try { b.disconnect(); } catch (e) {} }, 1500);
+  }
+}
+// pause sound while the app is in the background
+document.addEventListener("visibilitychange", () => {
+  if (!actx) return;
+  if (document.hidden) actx.suspend(); else if (!save.muted) actx.resume();
+});
 function buzz(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
 
 function updateMuteLabel() { $("muteBtn").classList.toggle("off", save.muted); }
@@ -122,7 +176,14 @@ function placePlay() {
 }
 window.addEventListener("resize", placePlay);
 window.addEventListener("load", () => { placePlay(); setTimeout(placePlay, 300); });
+
+/* ---------- SCREENS (with slide transitions in tab order) ---------- */
+const TAB_ORDER = ["home", "exploreScreen", "raceMenu", "journalScreen"];   // same order as the tab keys
+let prevScreen = null;
 function showScreen(id) {
+  const a = TAB_ORDER.indexOf(prevScreen), b = TAB_ORDER.indexOf(id);
+  document.body.dataset.dir = a >= 0 && b >= 0 ? (b > a ? "fwd" : "back") : "deep";
+  prevScreen = id;
   document.querySelectorAll(".screen").forEach(s => s.classList.add("hidden"));
   $(id).classList.remove("hidden");
   document.body.dataset.screen = id;
@@ -130,15 +191,15 @@ function showScreen(id) {
   window.scrollTo(0, 0);
   if (id === "home") applyScroll();
   fitTabbar();
-placePlay();}
+  placePlay();
+}
 let toastTimer;
 function toast(msg) {
   const t = $("toast"); t.textContent = msg; t.classList.remove("hidden");
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add("hidden"), 2200);
 }
 
-const SPR = "images/sanctuary/", WORLD = 2000, ZSTEP = 205, ZX0 = 110;
-const ZONE_FILE = { history: "zone-history", culture: "zone-culture", nature: "zone-nature", tourism: "zone-landmarks", sports: "zone-sports", cars: "zone-cars", space: "zone-space", food: "zone-food", architecture: "zone-architecture" };
+const SPR = "images/sanctuary/";
 const PLANTS = [["baobab", "Baobab"], ["oil-palm", "Oil Palm"], ["mango-tree", "Mango Tree"], ["cocoa-plant", "Cocoa Tree"], ["bush", "Bush"], ["hibiscus", "Hibiscus"], ["flowers", "Wildflowers"], ["grass", "Tall Grass"]];
 const PLANT_W = { "baobab-1": 50, "baobab-2": 90, "baobab-3": 140, "oil-palm": 90, "mango-tree": 100, "cocoa-plant": 70, bush: 62, hibiscus: 50, flowers: 42, grass: 38 };
 const ANIMALS = [
@@ -146,23 +207,9 @@ const ANIMALS = [
   { f: "grey-parrot", n: "Grey Parrot", fly: 1 }, { f: "antelope", n: "Antelope" }, { f: "monkey", n: "Mona Monkey" },
   { f: "elephant", n: "Elephant" }, { f: "fruit-bat", n: "Fruit Bat", fly: 1 }, { f: "toucan", n: "Toucan", fly: 1 }, { f: "zebra", n: "Zebra" }
 ];
-const THEMES = {
-  dawn: { sky: ["#f7c59f", "#ffe9bf"], far: "#c98b8b", mid: "#8d7a6b", gnd: ["#6aa04f", "#4a7c3a"], low: true },
-  day: { sky: ["#79c2e8", "#d6f1fc"], far: "#86b9b4", mid: "#5e9c6a", gnd: ["#5fae4f", "#3b7d3a"] },
-  evening: { sky: ["#e8765a", "#f6c27b"], far: "#9a5a7a", mid: "#6a4f6f", gnd: ["#4f8a45", "#2f5f35"], low: true },
-  night: { sky: ["#14102b", "#2b2158"], far: "#2d2b5a", mid: "#1f3a45", gnd: ["#2a5a3f", "#173a2c"], night: true }
-};
-const themeNow = () => { const h = new Date().getHours(); return h < 5 || h >= 20 ? "night" : h < 8 ? "dawn" : h < 16 ? "day" : "evening"; };
-const levelName = n => n < 5 ? "Seed" : n < 15 ? "Grove" : n < 30 ? "Haven" : "Sanctuary";
 const packTotal = id => PUZZLES.filter(p => p.cat === id).length;
 const packDone = id => save.journal.filter(i => PUZZLES[i] && PUZZLES[i].cat === id).length;
-let lastScroll = null, lastN = -1, pendingScroll = 0;
 
-function hillPath(base, amp, f1, f2, ph) {
-  let d = `M0,200 L0,${base}`;
-  for (let x = 0; x <= 2000; x += 25) d += ` L${x},${(base + amp * Math.sin(x * f1 + ph) + amp * 0.5 * Math.sin(x * f2 + ph * 2)).toFixed(1)}`;
-  return d + " L2000,200 Z";
-}
 function sprite(file, w, fb) {
   const img = new Image();
   img.src = SPR + file + ".webp"; img.draggable = false; img.style.width = w + "px";
@@ -179,24 +226,8 @@ function sanctuaryGain(i, pidx) {
   const c = CATEGORIES.find(x => x.id === PUZZLES[pidx].cat);
   return `${item} · ${c.name} zone ${packDone(c.id)} of ${packTotal(c.id)}`;
 }
-function zoneTap(c, done, tot) {
-  if (!done) return toast(`Solve a ${c.name} puzzle to start building here`);
-  const mine = save.journal.filter(i => PUZZLES[i] && PUZZLES[i].cat === c.id);
-  showCard(mine[mine.length - 1], false, null, "home", true);
-  $("cardReward").textContent = `${c.name} zone: ${done} of ${tot} restored`;
-}
-function parallax() {
-  const sc = $("scene").querySelector(".scroller"); if (!sc) return;
-  $("scene").querySelectorAll(".hl").forEach(h => h.style.transform = `translateX(${-sc.scrollLeft * +h.dataset.f}px)`);
-}
 
-
-
-
-
-
-
-let climbTop = null, climbN = -1, climbFocus = null, climbIO = null;
+let climbTop = null, climbN = -1, climbFocus = null;
 let calib = false, calibPts = {};
 const tierStage = (done, tot) => done >= tot ? 4 : done >= tot * 0.6 ? 3 : done >= tot * 0.35 ? 2 : done ? 1 : 0;
 let lastSig = "";
@@ -223,7 +254,6 @@ function smoothPath(pts) {
   return d;
 }
 
-
 const NODE_STEP = 84;
 function zonePositions(id, tot, k) {
   const H = Math.max(300, (tot - 1) * NODE_STEP + 112);
@@ -236,73 +266,20 @@ function zonePositions(id, tot, k) {
   return { H, pos };
 }
 
+// Opens the map with the current stop above the Play button.
+// Uses offsets (not screen position) so the screen-slide animation can't shift it.
 function applyScroll() {
   const wrap = $("scene").querySelector(".climb"); if (!wrap) return;
   if (climbTop != null) { wrap.scrollTop = climbTop; return; }
   const node = wrap.querySelector(".node.current");
-  if (node) {
-    const top = node.getBoundingClientRect().top - wrap.getBoundingClientRect().top + wrap.scrollTop;
-    wrap.scrollTop = Math.max(0, top - wrap.clientHeight * 0.4);
+  if (node && node.offsetParent) {
+    const y = node.offsetParent.offsetTop + node.offsetTop;
+    wrap.scrollTop = Math.max(0, y - wrap.clientHeight * 0.4);
   }
 }
 
 const ZONE_BG = { culture:"#8a3a6e", history:"#b4502a", nature:"#2f8a52", tourism:"#3a86c0", sports:"#c9662a", cars:"#5a4a66", space:"#1c1640", food:"#d0782a", architecture:"#4a3670" };
 
-const ZONE_KIND = { culture:"acacia", history:"acacia", nature:"trees", tourism:"trees", sports:"city", cars:"city", space:"stars", food:"trees", architecture:"city" };
-const KIND_GROUND = { trees:"#2f6b3a", acacia:"#8a7a3a", city:"#1f2540", stars:"#1c1640" };
-
-function scenery(id, H, k) {
-  const W = 400, rnd = mulberry32(hashStr("scn-" + id)), base = ZONE_BG[id], kind = ZONE_KIND[id] || "trees";
-  const cm = (a, p, b) => `color-mix(in srgb, ${a} ${p}%, ${b})`;
-  const hill = (y0, amp, f) => {
-    const ph = rnd() * 6, y = x => y0 + amp * Math.sin(x * f + ph) + amp * .45 * Math.sin(x * f * 2.3 + ph * 1.7);
-    let d = `M0,${H} L0,${y(0).toFixed(1)}`;
-    for (let x = 10; x <= W; x += 10) d += ` L${x},${y(x).toFixed(1)}`;
-    return { d: d + ` L${W},${H} Z`, y };
-  };
-  let s = `<defs>
-    <radialGradient id="sg${id}" cx="${(.25 + rnd() * .5).toFixed(2)}" cy=".26" r=".6"><stop offset="0" stop-color="#fff3c4" stop-opacity=".6"/><stop offset="1" stop-color="#fff3c4" stop-opacity="0"/></radialGradient>
-    <linearGradient id="hz${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffecd2" stop-opacity="0"/><stop offset=".6" stop-color="#ffecd2" stop-opacity=".22"/><stop offset="1" stop-color="#ffecd2" stop-opacity="0"/></linearGradient>
-    <radialGradient id="pl${id}" cx=".35" cy=".3"><stop offset="0" stop-color="#e3d9ff"/><stop offset="1" stop-color="#3a2a7a"/></radialGradient>
-  </defs>`;
-
-  if (kind === "stars") {
-    s += `<rect width="${W}" height="${H}" fill="url(#sg${id})" opacity=".5"/>`;
-    for (let i = 0; i < 80; i++) s += `<circle cx="${(rnd() * W).toFixed(0)}" cy="${(rnd() * H).toFixed(0)}" r="${(rnd() * 1.3 + .3).toFixed(1)}" fill="#fff" opacity="${(.3 + rnd() * .7).toFixed(2)}"/>`;
-    const px = 90 + rnd() * 220, py = H * .32;
-    s += `<circle cx="${px.toFixed(0)}" cy="${py.toFixed(0)}" r="34" fill="url(#pl${id})"/>
-      <ellipse cx="${px.toFixed(0)}" cy="${py.toFixed(0)}" rx="62" ry="12" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="3" transform="rotate(-18 ${px.toFixed(0)} ${py.toFixed(0)})"/>
-      <circle cx="${(W - px).toFixed(0)}" cy="${(H * .7).toFixed(0)}" r="14" fill="url(#pl${id})" opacity=".8"/>`;
-    return `<svg class="scenery" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${s}</svg>`;
-  }
-
-  const g = KIND_GROUND[kind];
-  const far = hill(H * .40, 12, .02), mid = hill(H * .56, 16, .025), near = hill(H * .76, 12, .035);
-  s += `<rect width="${W}" height="${H}" fill="url(#sg${id})"/>`;
-  s += `<path d="${far.d}" style="fill:${cm(base, 60, "#ffe6c4")}"/>`;
-
-  if (kind === "city") {
-    for (let x = -6; x < W; x += 20 + rnd() * 18) {
-      const w = 14 + rnd() * 14, h = 30 + rnd() * 80, y = far.y(x) - h + 10;
-      s += `<rect x="${x.toFixed(0)}" y="${y.toFixed(0)}" width="${w.toFixed(0)}" height="${h.toFixed(0)}" style="fill:${cm(base, 30, "#0e0a1c")}"/>`;
-      for (let n = 0; n < 5; n++) s += `<rect x="${(x + 3 + rnd() * (w - 8)).toFixed(0)}" y="${(y + 6 + rnd() * (h - 12)).toFixed(0)}" width="2" height="3" fill="#ffd36a" opacity="${(.4 + rnd() * .5).toFixed(2)}"/>`;
-    }
-  }
-  s += `<rect y="${(H * .34).toFixed(0)}" width="${W}" height="${(H * .22).toFixed(0)}" fill="url(#hz${id})"/>`;
-  s += `<path d="${mid.d}" style="fill:${cm(cm(g, 55, base), 82, "#10091e")}"/>`;
-
-  for (let i = 0; i < 10; i++) {
-    const x = rnd() * W, y = mid.y(x) + 2, z = 9 + rnd() * 11, tc = cm(g, 60, "#0b1a10");
-    if (kind === "acacia") s += `<path d="M${x.toFixed(0)},${y.toFixed(0)} l1,${-z} l-3,-4 M${x.toFixed(0)},${(y - z).toFixed(0)} l4,-4" stroke="#2a1a10" stroke-width="1.6" fill="none"/><ellipse cx="${x.toFixed(0)}" cy="${(y - z - 4).toFixed(0)}" rx="${(z * 1.1).toFixed(0)}" ry="${(z * .35).toFixed(0)}" style="fill:${tc}"/>`;
-    else if (kind === "trees") s += `<rect x="${(x - 1).toFixed(0)}" y="${(y - z * .6).toFixed(0)}" width="2" height="${(z * .7).toFixed(0)}" fill="#2a1a10"/><circle cx="${x.toFixed(0)}" cy="${(y - z).toFixed(0)}" r="${(z * .6).toFixed(0)}" style="fill:${tc}"/><circle cx="${(x - z * .35).toFixed(0)}" cy="${(y - z * .7).toFixed(0)}" r="${(z * .45).toFixed(0)}" style="fill:${tc}"/><circle cx="${(x + z * .4).toFixed(0)}" cy="${(y - z * .75).toFixed(0)}" r="${(z * .45).toFixed(0)}" style="fill:${tc}"/>`;
-  }
-  s += `<path d="${near.d}" style="fill:${cm(g, 82, "#10091e")}"/>`;
-  for (let i = 0; i < 26; i++) {
-    const x = rnd() * W, y = near.y(x) + 4 + rnd() * (H * .2);
-    s += `<path d="M${x.toFixed(0)},${y.toFixed(0)} l-2,-7 M${x.toFixed(0)},${y.toFixed(0)} l0,-9 M${x.toFixed(0)},${y.toFixed(0)} l2,-7" stroke="${cm(g, 55, "#a8d878")}" stroke-width="1.2" fill="none" opacity=".6"/>`;
-  }
-  return `<svg class="scenery" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${s}</svg>`;
-}
 function openSheet(o, c, state) {
   const img = $("sheetImg"), btn = $("sheetBtn");
   $("sheet").dataset.state = state;
@@ -330,7 +307,7 @@ function closeSheet() { $("sheet").classList.add("hidden"); }
 $("sheet").onclick = e => { if (e.target === $("sheet")) closeSheet(); };
 
 function renderSanctuary(quiet) {
-    const sig = [save.puzzleIndex, save.journal.length, save.sanctuary.length, doneToday(), quiet].join("|");
+  const sig = [save.puzzleIndex, save.journal.length, save.sanctuary.length, doneToday(), quiet].join("|");
   if (sig === lastSig && $("scene").querySelector(".climb")) return;
   lastSig = sig;
   const scene = $("scene"), n = save.sanctuary.length;
@@ -340,7 +317,7 @@ function renderSanctuary(quiet) {
   scene.removeAttribute("style");
   scene.className = "climbScene" + (quiet ? " quiet" : "");
 
-    scene.innerHTML = '<div class="climb"></div>';
+  scene.innerHTML = '<div class="climb"></div>';
   const wrap = scene.querySelector(".climb");
   const zoneList = [...CATEGORIES].reverse().filter(x => packTotal(x.id));
   const lastP = save.journal.length ? PUZZLES[save.journal[save.journal.length - 1]] : null;
@@ -356,7 +333,7 @@ function renderSanctuary(quiet) {
     tier.className = `tier category-${c.id} s${stage}` + (open ? "" : " locked") + (done >= tot ? " complete" : "");
     tier.dataset.cat = c.id;
 
-        const ri = zoneList.indexOf(c), me = ZONE_BG[c.id];
+    const ri = zoneList.indexOf(c), me = ZONE_BG[c.id];
     const up = ZONE_BG[(zoneList[ri - 1] || c).id], dn = ZONE_BG[(zoneList[ri + 1] || c).id];
     tier.style.background = `linear-gradient(180deg, color-mix(in srgb, ${up}, ${me}) 0%, ${me} 28%, ${me} 72%, color-mix(in srgb, ${me}, ${dn}) 100%)`;
 
@@ -373,12 +350,10 @@ function renderSanctuary(quiet) {
 
     tier.appendChild(mapLayer("map-" + c.id, "terrain"));
 
-
-
-        const { H, pos } = zonePositions(c.id, tot, k);
+    const { H, pos } = zonePositions(c.id, tot, k);
     tier.style.height = H + "px"; tier.style.minHeight = "0";
     const d = smoothPath([{ x: 50, y: 101 }, ...pos, { x: 50, y: -1 }]);
-        tier.insertAdjacentHTML("beforeend",
+    tier.insertAdjacentHTML("beforeend",
       `<svg class="trail" viewBox="0 0 100 100" preserveAspectRatio="none"><path class="rShade" d="${d}"/><path class="rEdge" d="${d}"/><path class="rSurf" d="${d}"/><path class="rLine" d="${d}"/></svg>`);
     tier.appendChild(mapLayer("path-" + c.id, "pathArt", () => tier.classList.add("hasPath")));
 
@@ -405,19 +380,19 @@ function renderSanctuary(quiet) {
 
     list.forEach((o, j) => {
       const state = save.journal.includes(o.i) ? "done" : (o.i === cur ? "current" : "locked");
-const preview = state === "locked" && j === 0;
-const node = document.createElement("button");
-node.className = "node " + state + (preview ? " preview" : "");
+      const preview = state === "locked" && j === 0;
+      const node = document.createElement("button");
+      node.className = "node " + state + (preview ? " preview" : "");
       node.style.left = pos[j].x + "%"; node.style.top = pos[j].y + "%";
       node.setAttribute("aria-label", state === "locked" ? `${c.name} puzzle, locked` : o.p.name);
       const pin = document.createElement("div"); pin.className = "pin";
       pin.appendChild(sprite("zone-map", 20, () => { const s = document.createElement("span"); s.textContent = "📍"; return s; }));
       const card = document.createElement("div"); card.className = "nCard";
       if (state !== "locked" || preview) card.style.backgroundImage = `url(${o.p.image})`;
-const nm = document.createElement("span"); nm.className = "nName";
-nm.textContent = (state === "locked" && !preview) ? "???" : o.p.name;
+      const nm = document.createElement("span"); nm.className = "nName";
+      nm.textContent = (state === "locked" && !preview) ? "???" : o.p.name;
       node.append(pin, card, nm);
-            node.onclick = () => {
+      node.onclick = () => {
         if (state === "done") showCard(o.i, false, null, "home", save.deep.includes(o.i));
         else openSheet(o, c, state);
       };
@@ -427,10 +402,9 @@ nm.textContent = (state === "locked" && !preview) ? "???" : o.p.name;
     wrap.appendChild(tier);
   });
 
-    wrap.onscroll = () => { climbTop = wrap.scrollTop; };
+  wrap.onscroll = () => { climbTop = wrap.scrollTop; };
   applyScroll();
 }
-
 
 function renderWeek() {
   const t = todayStr(), row = $("weekRow");
@@ -460,7 +434,7 @@ function refreshHome() {
   const c = save.puzzleIndex, pack = CATEGORIES.find(x => x.id === PUZZLES[puzzleAt(c)].cat);
   $("beginBtn").textContent = done ? "Play again" : "Play today's puzzle";
   $("beginBtn").classList.toggle("secondary", done);
-    $("playSub").textContent = "";
+  $("playSub").textContent = "";
 
   renderWeek();
   renderSanctuary(broken && !!save.lastPlayed && !done);
@@ -487,6 +461,7 @@ function squareImage(src) {
 
 const board = $("board");
 let puzzle, puzzleIdx = 0, counter = 0, replay = false, solved = false, twist = "Classic";
+let moveCount = 0, parMoves = 30;
 let order = [], lastMove = null, memTimer;
 
 function hashStr(s) { let h = 2166136261; for (const ch of s) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
@@ -551,17 +526,18 @@ async function startPuzzle(opts) {
   const [, size, moves] = exploreMode ? [0, opts.size, { 3: 40, 4: 90, 5: 180 }[opts.size]] : levelFor(counter),
     tw = exploreMode ? TWISTS[0] : twistFor(counter);
   SIZE = size; TOTAL = size * size; twist = tw.n;
+  parMoves = moves; moveCount = 0;
   $("refImg").src = puzzle.sq || puzzle.image; $("refName").textContent = puzzle.name;
   order = scramble(moves, opts && opts.seed != null ? mulberry32(opts.seed) : Math.random); lastMove = null; solved = false;
   board.className = "";
   board.style.gridTemplateColumns = board.style.gridTemplateRows = `repeat(${SIZE}, 1fr)`;
   setupMemory(twist === "Memory");
   if (exploreMode) {
-  $("puzzleHint").textContent = "";
-} else {
-  $("puzzleHint").textContent = "Breathe in… 🌬️";
-  setTimeout(() => { if (!solved) $("puzzleHint").textContent = `Today: ${tw.n} (${SIZE}×${SIZE}). ${tw.d}`; }, 2500);
-}
+    $("puzzleHint").textContent = "";
+  } else {
+    $("puzzleHint").textContent = "Breathe in… 🌬️";
+    setTimeout(() => { if (!solved) $("puzzleHint").textContent = `Today: ${tw.n} (${SIZE}×${SIZE}). ${tw.d}`; }, 2500);
+  }
   renderBoard(); showScreen("puzzleScreen");
   startTime = Date.now();
   if (dailyRun) tick = setInterval(() => { if (!solved) $("puzzleHint").textContent = "Daily Challenge · " + fmtTime(Date.now() - startTime); }, 500);
@@ -598,6 +574,7 @@ function onTileClick(pos) {
   const e = order.indexOf(TOTAL - 1);
   if (!adjacent(pos, e)) { sfx.tap(); return; }
   [order[pos], order[e]] = [order[e], order[pos]];
+  moveCount++;
   lastMove = { to: e, dx: colOf(pos) - colOf(e), dy: rowOf(pos) - rowOf(e) };
   sfx.swap(); buzz(12);
   renderBoard();
@@ -625,7 +602,7 @@ function onWin() {
     updateStreak();
     if (!save.journal.includes(puzzleIdx)) save.journal.push(puzzleIdx);
     if (cycle >= 1 && !save.deep.includes(puzzleIdx)) save.deep.push(puzzleIdx);
-       save.sanctuary.push(puzzleIdx % REWARDS.length);
+    save.sanctuary.push(puzzleIdx % REWARDS.length);
     reward = { name: sanctuaryGain(save.sanctuary.length - 1, puzzleIdx) };
     save.puzzleIndex++;
     writeSave();
@@ -643,22 +620,47 @@ function onWin() {
     }
     writeSave();
   } else lastShareText = "";
-  setTimeout(() => {
+  setTimeout(() => showWin(() => {
     exploreMode ? showCard(puzzleIdx, false, null, "explore", true) : showCard(puzzleIdx, cycle >= 1, reward, "home");
     if (note) $("cardReward").textContent = note;
-  }, 1600);
+  }), 1600);
 }
 
+/* ---------- WIN SCREEN ---------- */
+const STAR_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.4l2.9 6.2 6.7.8-4.9 4.6 1.3 6.7L12 17.4l-6 3.3 1.3-6.7L2.4 9.4l6.7-.8z"/></svg>';
+// 3 stars = close to the shortest solution, 2 = good, 1 = finished
+const starsFor = m => { const r = m / Math.max(1, parMoves); return r <= 1.5 ? 3 : r <= 2.6 ? 2 : 1; };
+function showWin(next) {
+  const ms = Date.now() - startTime, n = starsFor(moveCount), box = $("winStars");
+  $("winName").textContent = puzzle.name;
+  $("winTime").textContent = fmtTime(ms);
+  $("winMoves").textContent = moveCount;
+  box.innerHTML = "";
+  for (let k = 0; k < 3; k++) {
+    const s = document.createElement("span");
+    s.className = "winStar" + (k < n ? " on" : "");
+    s.style.setProperty("--d", (0.35 + k * 0.28) + "s");
+    s.innerHTML = STAR_SVG;
+    box.appendChild(s);
+    if (k < n) setTimeout(() => tone([659.25, 783.99, 1046.5][k], 0.6, 0.1), 350 + k * 280);
+  }
+  $("winBtn").onclick = () => { $("win").classList.add("hidden"); next(); };
+  $("win").classList.remove("hidden");
+}
+
+/* ---------- HERITAGE CARD (collectible) ---------- */
 let cardReturn = "home", cardText = "", cardPuzzle = null;
 function showCard(idx, deep, reward, returnTo, both) {
-  const p = PUZZLES[idx];
+  const p = PUZZLES[idx], cat = CATEGORIES.find(c => c.id === p.cat);
   cardPuzzle = p; cardReturn = returnTo;
   cardText = both ? `${p.fact1} ${p.fact2}` : (deep ? p.fact2 : p.fact1);
+  $("card").dataset.cat = p.cat;
+  $("cardCat").textContent = cat ? cat.name : "";
   $("cardImg").src = p.image;
   $("cardTitle").textContent = p.name;
   $("cardFact").textContent = cardText;
   $("cardSource").textContent = p.visit ? "📍 " + p.visit : "";
-$("cardReward").textContent = "";
+  $("cardReward").textContent = "";
   $("card").classList.remove("hidden");
 }
 $("cardContinue").onclick = () => {
@@ -783,8 +785,47 @@ $("tabExplore").onclick = () => { renderExplore(); showScreen("exploreScreen"); 
 $("tabHome").onclick = () => { refreshHome(); showScreen("home"); };
 $("exBack").onclick = () => { refreshHome(); showScreen("home"); };
 
-$("helpBtn").onclick = () => $("tutorial").classList.remove("hidden");
-$("tutOk").onclick = () => { save.seenTutorial = true; writeSave(); $("tutorial").classList.add("hidden"); };
+/* ---------- HOW TO PLAY: a 2×2 puzzle you really slide ---------- */
+const HAND = '<svg class="tutHand" viewBox="0 0 24 24"><g fill="#fff" stroke="#2a1a05" stroke-width="1.2" stroke-linejoin="round"><path d="M7 14h12.2v3.5A5.5 5.5 0 0 1 13.7 23h-1.2A5.5 5.5 0 0 1 7 17.5z"/><rect x="9.2" y="2" width="3.6" height="13" rx="1.8"/><rect x="13" y="9" width="3.2" height="7" rx="1.6"/><rect x="16.2" y="10.2" width="3" height="6.5" rx="1.5"/><circle cx="6.8" cy="15.2" r="1.9"/></g><rect x="9.6" y="13" width="9.4" height="4" fill="#fff"/></svg>';
+const TUT_START = [3, 0, 2, 1], TUT_PATH = [1, 3];       // two guided slides solve it
+let tutOrder = [], tutN = 0, tutImg = "";
+async function openTutorial() {
+  tutOrder = TUT_START.slice(); tutN = 0;
+  tutImg = await squareImage(PUZZLES[0].image);
+  renderTut(); $("tutorial").classList.remove("hidden");
+}
+function renderTut() {
+  const tb = $("tutBoard"), done = tutN >= TUT_PATH.length;
+  tb.innerHTML = ""; tb.classList.toggle("solved", done);
+  tutOrder.forEach((t, pos) => {
+    const d = document.createElement("div"), isHint = !done && pos === TUT_PATH[tutN];
+    d.className = "tutTile" + (t === 3 && !done ? " void" : "") + (isHint ? " hint" : "");
+    d.style.backgroundImage = `url(${tutImg})`;
+    d.style.backgroundSize = "200% 200%";
+    d.style.backgroundPosition = `${(t % 2) * 100}% ${Math.floor(t / 2) * 100}%`;
+    if (isHint) d.insertAdjacentHTML("beforeend", HAND);
+    d.onclick = () => tutTap(pos);
+    tb.appendChild(d);
+  });
+  $("tutStep").textContent = done ? "All done" : `Step ${tutN + 1} of ${TUT_PATH.length}`;
+  $("tutTitle").textContent = done ? "You're ready!" : "Slide a tile";
+  $("tutText").textContent = done ? "Rebuild the picture, learn its story, grow your sanctuary and keep your daily streak."
+    : tutN === 0 ? "Tap the tile with the hand. It's next to the empty space." : "Nice! Now slide this one into the gap.";
+  $("tutOk").classList.toggle("hidden", !done);
+  $("tutSkip").classList.toggle("hidden", done);
+}
+function tutTap(pos) {
+  if (tutN >= TUT_PATH.length) return;
+  if (pos !== TUT_PATH[tutN]) { sfx.tap(); return; }
+  const gap = tutOrder.indexOf(3);
+  [tutOrder[pos], tutOrder[gap]] = [tutOrder[gap], tutOrder[pos]];
+  tutN++; buzz(12);
+  if (tutN >= TUT_PATH.length) { sfx.win(); confetti(); } else sfx.swap();
+  renderTut();
+}
+const closeTut = () => { save.seenTutorial = true; writeSave(); $("tutorial").classList.add("hidden"); };
+$("tutOk").onclick = $("tutSkip").onclick = closeTut;
+$("helpBtn").onclick = openTutorial;
 
 document.addEventListener("click", e => {
   if (e.target.closest("button") && !e.target.closest("#tabbar")) tone(660, 0.07, 0.07);
@@ -822,4 +863,4 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catc
 CATEGORIES.forEach(c => mapLayer("map-" + c.id, "terrain"));
 refreshHome();
 showScreen("home");
-if (!save.seenTutorial) $("tutorial").classList.remove("hidden");
+if (!save.seenTutorial) openTutorial();

@@ -74,10 +74,12 @@
     <div id="exList"></div>
     <button id="exBack" class="secondary">Home</button>
   </section>
-  
+
+  <!-- HERITAGE CARD (collectible) -->
   <div id="card" class="hidden">
-    <div class="cardBox">
-      <img id="cardImg" alt="">
+    <div class="cardBox hCard">
+      <div class="hcRibbon"><span id="cardCat"></span></div>
+      <div class="hcPic"><img id="cardImg" alt=""><span class="hcShine"></span></div>
       <h2 id="cardTitle"></h2>
       <p id="cardReward" class="reward"></p>
       <p id="cardFact"></p>
@@ -89,12 +91,28 @@
     </div>
   </div>
 
-  <div id="tutorial" class="hidden"><div class="cardBox">
-    <h2>How to play</h2>
-    <p>1. Tap a tile next to the empty space to slide it.</p>
-    <p>2. Rebuild the picture. No timer, no pressure.</p>
-    <p>3. Learn a fact, grow your sanctuary and keep your daily streak.</p>
-    <button id="tutOk">Let's go</button>
+  <!-- WIN SCREEN -->
+  <div id="win" class="hidden">
+    <div class="winBox">
+      <small class="winKicker">Puzzle restored</small>
+      <h2 id="winName"></h2>
+      <div id="winStars"></div>
+      <div class="winStats">
+        <div><b id="winTime"></b><span>Time</span></div>
+        <div><b id="winMoves"></b><span>Moves</span></div>
+      </div>
+      <button id="winBtn">Continue</button>
+    </div>
+  </div>
+
+  <!-- HOW TO PLAY (interactive) -->
+  <div id="tutorial" class="hidden"><div class="cardBox tutBox">
+    <small class="tutStep" id="tutStep"></small>
+    <h2 id="tutTitle"></h2>
+    <p id="tutText"></p>
+    <div id="tutBoard"></div>
+    <button id="tutOk" class="hidden">Let's go</button>
+    <button id="tutSkip" class="secondary">Skip</button>
   </div></div>
 
   <div id="sheet" class="hidden">
