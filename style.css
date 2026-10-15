@@ -1,3 +1,9 @@
+@font-face { font-family:"Fredoka"; font-style:normal; font-weight:500; font-display:swap; src:url("fonts/fredoka-v17-latin-500.woff2") format("woff2"); }
+@font-face { font-family:"Fredoka"; font-style:normal; font-weight:600; font-display:swap; src:url("fonts/fredoka-v17-latin-600.woff2") format("woff2"); }
+@font-face { font-family:"Fredoka"; font-style:normal; font-weight:700; font-display:swap; src:url("fonts/fredoka-v17-latin-700.woff2") format("woff2"); }
+@font-face { font-family:"Nunito"; font-style:normal; font-weight:400; font-display:swap; src:url("fonts/nunito-v32-latin-regular.woff2") format("woff2"); }
+@font-face { font-family:"Nunito"; font-style:normal; font-weight:700; font-display:swap; src:url("fonts/nunito-v32-latin-700.woff2") format("woff2"); }
+
 :root { --bg:#1d1530; --bg2:#2b1f45; --card:#352858; --cream:#fff4e0; --gold:#ffc94a; --gold-d:#c98a00; --terra:#e8663d; --green:#4fbf7a; --ink:#2a1a05; --r:18px; --ease:cubic-bezier(.34,1.56,.64,1); }
 * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 html, body { margin:0; }

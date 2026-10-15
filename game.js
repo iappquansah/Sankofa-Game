@@ -357,27 +357,6 @@ function renderSanctuary(quiet) {
       `<svg class="trail" viewBox="0 0 100 100" preserveAspectRatio="none"><path class="rShade" d="${d}"/><path class="rEdge" d="${d}"/><path class="rSurf" d="${d}"/><path class="rLine" d="${d}"/></svg>`);
     tier.appendChild(mapLayer("path-" + c.id, "pathArt", () => tier.classList.add("hasPath")));
 
-    const doneList = list.filter(o => save.journal.includes(o.i));
-    doneList.forEach((o, j) => {
-      const el = document.createElement("div");
-      if (j % 3 === 2) {
-        const a = ANIMALS[(k + j) % ANIMALS.length];
-        el.className = "prop2 " + (a.fly ? "flyer2" : "walker2");
-        if (a.fly) el.style.top = (8 + (j * 29 + k * 7) % 80) + "%"; else el.style.bottom = (4 + (j * 37 + k * 11) % 88) + "%";
-        el.appendChild(sprite(a.f, a.fly ? 40 : 58, null));
-        el.onclick = ev => { ev.stopPropagation(); toast(a.n); tone(520 + (j % 5) * 60, 0.12, 0.08); };
-      } else {
-        const p = PLANTS[(k + j) % PLANTS.length];
-        const file = p[0] === "baobab" ? "baobab-2" : p[0], w = Math.round(PLANT_W[file] * 0.75);
-        el.className = "prop2 plant2"; el.style.bottom = (4 + (j * 37 + k * 11) % 88) + "%";
-        el.appendChild(sprite(file, w, () => treeFB(w)));
-        el.onclick = ev => { ev.stopPropagation(); toast(p[1]); };
-      }
-      el.style.left = (6 + (j * 31 + k * 17) % 84) + "%";
-      if (lastP && lastP.cat === c.id && j === doneList.length - 1) el.classList.add("newest");
-      tier.appendChild(el);
-    });
-
     list.forEach((o, j) => {
       const state = save.journal.includes(o.i) ? "done" : (o.i === cur ? "current" : "locked");
       const preview = state === "locked" && j === 0;
